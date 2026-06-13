@@ -51,24 +51,8 @@
   $: pointsBehind = Math.max(0, highScore - sessionScore);
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="overlay" transition:fade={{ duration: 300 }}>
-  {#if isNewHighScore && confettiPieces.length > 0}
-    <div class="confetti-container" aria-hidden="true">
-      {#each confettiPieces as piece (piece.id)}
-        <div
-          class="confetti-piece"
-          style="
-            left: {piece.x}%;
-            animation-delay: {piece.delay}s;
-            animation-duration: {piece.duration}s;
-            background: {piece.color};
-            --rotation: {piece.rotation}deg;
-          "
-        ></div>
-      {/each}
-    </div>
-  {/if}
-
   <div class="sheet" transition:fly={{ y: 80, duration: 400, delay: 50 }}>
     <h1 class="heading">Game Over</h1>
 
@@ -125,6 +109,23 @@
     </button>
   </div>
 </div>
+
+{#if isNewHighScore && confettiPieces.length > 0}
+  <div class="confetti-container" aria-hidden="true">
+    {#each confettiPieces as piece (piece.id)}
+      <div
+        class="confetti-piece"
+        style="
+          left: {piece.x}%;
+          animation-delay: {piece.delay}s;
+          animation-duration: {piece.duration}s;
+          background: {piece.color};
+          --rotation: {piece.rotation}deg;
+        "
+      ></div>
+    {/each}
+  </div>
+{/if}
 
 <style>
   .overlay {

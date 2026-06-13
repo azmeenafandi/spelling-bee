@@ -423,50 +423,52 @@
       animating={tierAnimating}
     />
 
-    <!-- Word area: definition + pronounce -->
-    <div class="word-area">
-      {#if $currentWord}
-        <DefinitionDisplay
-          definition={$currentWord.definition}
-          wordId={$currentWord.id}
-          on:report={(e) => handleReport(e.detail)}
-        />
-        <PronounceButton
-          spelling={$currentWord._spelling}
-          {lang}
+    <!-- Word + input: centred together -->
+    <div class="middle-group">
+      <div class="word-area">
+        {#if $currentWord}
+          <DefinitionDisplay
+            definition={$currentWord.definition}
+            wordId={$currentWord.id}
+            on:report={(e) => handleReport(e.detail)}
+          />
+          <PronounceButton
+            spelling={$currentWord._spelling}
+            {lang}
+            disabled={$gameState !== 'playing' && $gameState !== 'wrong'}
+          />
+        {:else}
+          <!-- Loading skeleton -->
+          <div class="skeleton-card">
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+          <div class="skeleton-btn"></div>
+        {/if}
+      </div>
+
+      <!-- Input area -->
+      <div class="input-area">
+        <SpellingInput
+          attempt={$currentAttempt}
           disabled={$gameState !== 'playing' && $gameState !== 'wrong'}
+          error={inputError}
+          {correctFlash}
+          on:spelling={handleCheck}
         />
-      {:else}
-        <!-- Loading skeleton -->
-        <div class="skeleton-card">
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line short"></div>
-        </div>
-        <div class="skeleton-btn"></div>
-      {/if}
-    </div>
 
-    <!-- Input area -->
-    <div class="input-area">
-      <SpellingInput
-        attempt={$currentAttempt}
-        disabled={$gameState !== 'playing' && $gameState !== 'wrong'}
-        error={inputError}
-        {correctFlash}
-        on:spelling={handleCheck}
-      />
+        {#if $gameState === 'wrong' && !inputError}
+          <p class="try-again-text" in:fade={{ duration: 200 }}>
+            Try again — one attempt remaining
+          </p>
+        {/if}
 
-      {#if $gameState === 'wrong' && !inputError}
-        <p class="try-again-text" in:fade={{ duration: 200 }}>
-          Try again — one attempt remaining
-        </p>
-      {/if}
-
-      {#if showPhew}
-        <p class="phew-text" in:fade={{ duration: 200 }}>
-          Phew! 😅
-        </p>
-      {/if}
+        {#if showPhew}
+          <p class="phew-text" in:fade={{ duration: 200 }}>
+            Phew! 😅
+          </p>
+        {/if}
+      </div>
     </div>
   </div>
 
@@ -591,15 +593,24 @@
     width: 100%;
   }
 
-  /* ── Word area ── */
+  <!-- ── Word area ── -->
   .word-area {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--space-4);
     width: 100%;
+  }
+
+  /* ── Middle group: word + input centred together ── */
+  .middle-group {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
   }
 
   /* ── Input area ── */
