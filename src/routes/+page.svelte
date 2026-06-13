@@ -425,25 +425,27 @@
 
     <!-- Word + input: centred together -->
     <div class="middle-group">
-      {#if $currentWord}
-        <DefinitionDisplay
-          definition={$currentWord.definition}
-          wordId={$currentWord.id}
-          on:report={(e) => handleReport(e.detail)}
-        />
-        <PronounceButton
-          spelling={$currentWord._spelling}
-          {lang}
-          disabled={$gameState !== 'playing' && $gameState !== 'wrong'}
-        />
-      {:else}
-        <!-- Loading skeleton -->
-        <div class="skeleton-card">
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line short"></div>
-        </div>
-        <div class="skeleton-btn"></div>
-      {/if}
+      <div class="word-area">
+        {#if $currentWord}
+          <DefinitionDisplay
+            definition={$currentWord.definition}
+            wordId={$currentWord.id}
+            on:report={(e) => handleReport(e.detail)}
+          />
+          <PronounceButton
+            spelling={$currentWord._spelling}
+            {lang}
+            disabled={$gameState !== 'playing' && $gameState !== 'wrong'}
+          />
+        {:else}
+          <!-- Loading skeleton -->
+          <div class="skeleton-card">
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+          <div class="skeleton-btn"></div>
+        {/if}
+      </div>
 
       <!-- Input area -->
       <div class="input-area">
@@ -591,6 +593,15 @@
     width: 100%;
   }
 
+  <!-- ── Word area ── -->
+  .word-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    width: 100%;
+  }
+
   /* ── Middle group: word + input centred together ── */
   .middle-group {
     flex: 1;
@@ -598,9 +609,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--space-4);
+    gap: var(--space-2);
     width: 100%;
-    max-width: 400px;
   }
 
   /* ── Input area ── */
