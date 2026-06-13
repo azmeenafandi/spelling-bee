@@ -398,7 +398,7 @@
      =================================================================== -->
 
 {#if $gameState === 'variant-select'}
-  <VariantSelect on:start={handleStart} />
+  <VariantSelect onStart={handleStart} />
 {:else}
   <div class="game-container">
     <!-- Settings button -->

@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { variant } from '$lib/stores';
 
-  const dispatch = createEventDispatcher<{ start: void }>();
+  let { onStart }: { onStart: () => void } = $props();
 
-  let selected: 'british' | 'american' | null = $variant || null;
+  let selected: 'british' | 'american' | null = $state($variant || null);
 
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -18,7 +17,7 @@
 
   function handleStart() {
     if (!selected) return;
-    dispatch('start');
+    onStart();
   }
 </script>
 
@@ -32,7 +31,7 @@
     <button
       class="card"
       class:selected={selected === 'british'}
-      on:click={() => selectVariant('british')}
+      onclick={() => selectVariant('british')}
       aria-pressed={selected === 'british'}
     >
       <span class="card-flag">🇬🇧</span>
@@ -42,7 +41,7 @@
     <button
       class="card"
       class:selected={selected === 'american'}
-      on:click={() => selectVariant('american')}
+      onclick={() => selectVariant('american')}
       aria-pressed={selected === 'american'}
     >
       <span class="card-flag">🇺🇸</span>
@@ -53,7 +52,7 @@
   <button
     class="start-btn"
     disabled={!selected}
-    on:click={handleStart}
+    onclick={handleStart}
   >
     Start Game
   </button>
