@@ -25,22 +25,28 @@
   }
 </script>
 
-<button
-  class="pronounce-btn"
-  class:speaking
-  disabled={disabled || !speechSupported}
-  on:click={handlePronounce}
-  aria-label={speechSupported ? 'Pronounce word' : 'Speech not supported'}
-  title={!speechSupported ? 'Speech not supported' : undefined}
->
-  <span class="icon" aria-hidden="true">🔊</span>
-  <span class="label">Pronounce</span>
-</button>
+<div class="pronounce-wrapper">
+  <button
+    class="pronounce-btn"
+    class:speaking
+    disabled={disabled || !speechSupported}
+    on:click={handlePronounce}
+    aria-label={speechSupported ? 'Pronounce word' : 'Speech not supported'}
+    title={!speechSupported ? 'Speech not supported' : undefined}
+  >
+    <span class="icon" aria-hidden="true">🔊</span>
+    <span class="label">Pronounce</span>
+  </button>
+</div>
 
 <style>
+  .pronounce-wrapper {
+    text-align: center;
+    width: 100%;
+  }
+
   .pronounce-btn {
     display: inline-flex;
-    align-self: center;
     align-items: center;
     gap: var(--space-2);
     background: var(--color-surface);

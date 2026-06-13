@@ -593,7 +593,7 @@
     width: 100%;
   }
 
-  <!-- ── Word area ── -->
+  /* ── Word area ── */
   .word-area {
     display: flex;
     flex-direction: column;
