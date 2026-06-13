@@ -128,8 +128,9 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
       { status: 200, headers: JSON_HEADERS }
     );
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Internal server error';
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: JSON_HEADERS }
     );
   }

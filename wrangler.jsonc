@@ -6,8 +6,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "spelling-bee-db",
-      "database_id": "spelling-bee-db-dev"
+      "database_name": "spelling-bee-db"
     }
   ],
   "observability": {
