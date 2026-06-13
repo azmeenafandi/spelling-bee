@@ -40,8 +40,8 @@ A single-player spelling-bee web application. The player is shown a word's defin
 │  │     Static Frontend      │  │   Pages Functions (API)     │ │
 │  │                          │  │                             │ │
 │  │  • Variant selector      │  │  GET  /api/word             │ │
-│  │  • Definition display    │  │  POST /api/check            │ │
-│  │  • Pronounce button      │  │                             │ │
+│  │  • Definition display    │  │  GET  /api/word             │ │
+│  │  • Pronounce button      │  │  POST /api/check            │ │
 │  │  • Spelling input        │  │  POST /api/check            │ │
 │  │  • Report flag (🚩)      │  │  POST /api/report           │ │
 │  │  • Streak + tier tracker │  │  Stateless — no sessions,   │ │
