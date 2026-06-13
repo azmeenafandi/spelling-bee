@@ -1,6 +1,6 @@
 # Spelling Bee — System Specification
 
-> **Status**: Draft  
+> **Status**: MVP (functional)  
 > **Hosting**: Cloudflare Pages (free tier)  
 > **Last updated**: 2026-06-13
 
@@ -47,14 +47,14 @@ A single-player spelling-bee web application. The player is shown a word's defin
 │  │  • Streak + tier tracker │  │  Stateless — no sessions,   │ │
 │  │  • Score display         │  │  no auth. Reports write to  │ │
 │  │  • Achievement toasts    │  │  D1; all else is read-only.  │ │
+│  │  • Settings sheet        │  │                             │ │
 │  └──────────────────────────┘              │                   │
 └────────────────────────────────────────────┼───────────────────┘
                                              │ D1 binding
                                     ┌────────▼──────────┐
                                     │   D1 Database       │
-                                    │   words table       │
-                                    │   Read-only at      │
-                                    │   runtime           │
+                                    │   words (read-only) │
+                                    │   reports (write)   │
                                     └────────────────────┘
 ```
 
@@ -143,11 +143,14 @@ GET /api/word?variant=<variant>&length_min=<n>&length_max=<n>&max_obscurity=<n>&
 ```json
 {
   "id": 42,
-  "definition": "A building for dramatic performances"
+  "definition": "A building for dramatic performances",
+  "_spelling": "theatre",
+  "_obscurity": 3,
+  "_length": 7
 }
 ```
 
-The `spelling` field is intentionally absent. The correct spelling never reaches the client at this stage.
+The `_spelling` field is the correct spelling — fed directly to the Web Speech API for pronunciation but **never rendered in the DOM**. The `_obscurity` and `_length` fields are used by the frontend to calculate the score without a second query.
 
 **Error Response (404)**
 
@@ -162,7 +165,7 @@ Returned when all eligible words have been exhausted (e.g., the player has cycle
 **SQL Implementation**
 
 ```sql
-SELECT id, definition
+SELECT id, definition, spelling AS _spelling, obscurity AS _obscurity, length AS _length
 FROM words
 WHERE variant IN (?, 'both')
   AND length >= ?
@@ -394,7 +397,7 @@ score += floor(
 | First word, easy | 1 | 1 | 6 | 1st | **10** |
 | Early, moderate | 2 | 2 | 6 | 2nd | **10** |
 | Mid-game | 3 | 3 | 8 | 1st | **66** |
-| Hard word, late | 4 | 4 | 9 | 1st | **138** |
+| Hard word, late | 4 | 4 | 9 | 1st | **115** |
 | Peak difficulty | 5 | 5 | 10 | 1st | **180** |
 | Peak, sloppy | 5 | 5 | 10 | 2nd | **90** |
 
@@ -447,8 +450,9 @@ On game over, session score is compared to the stored high score. If beaten, the
 | Screen | Description |
 |--------|-------------|
 | **Variant Select** | Two large buttons: "British English 🇬🇧" / "American English 🇺🇸". Persists choice to `localStorage`. Only shown on first visit or when the user explicitly changes it. |
-| **Game** | Definition text (large, centred), "🔊 Pronounce" button, text input field, "Enter" button, live score + rank, tier indicator, streak counter, high score. |
-| **Game Over** | Correct spelling revealed, final score, rank earned, comparison to high score ("New high score!" or "Best: X — you were Y points short"), "Play Again" button, list of any achievements unlocked this session. |
+| **Game** | Definition text (large, centred), "🔊 Pronounce" button, text input field, live score + rank, tier indicator, streak counter, high score, settings gear icon (⚙), report flag (🚩). |
+| **Game Over** | Correct spelling revealed, final score, rank earned, comparison to high score, "Play Again" button, achievements unlocked this session, report flag on revealed word. |
+| **Settings** | Bottom sheet: variant toggle, export/import data as JSON file, reset all data with confirmation. |
 
 ### 7.2 Pronounce Button
 
@@ -460,7 +464,7 @@ On game over, session score is compared to the stored high score. If beaten, the
 
 **How the spelling reaches the TTS engine without being displayed**: The `/api/check` endpoint (on a correct answer) or the game-over response can optionally return an `audio_token` — a short-lived reference used by the client to play the pronunciation. Alternatively, the spelling can be included in the `/api/word` response inside a `pronunciation` field that the frontend feeds directly to `speechSynthesis` without rendering it to the DOM or storing it in observable state.
 
-> **Recommendation**: For simplicity in v1, include the spelling alongside the definition in the `/api/word` response under a separate field. The frontend passes it to `speechSynthesis` and does not render it. This avoids additional round-trips. The field should be named `_spelling` (underscore convention) to signal "internal use only — do not display."
+> For simplicity in v1, the `/api/word` response includes `_spelling` (for pronunciation), `_obscurity`, and `_length` (for score calculation). The frontend passes `_spelling` directly to `speechSynthesis` without rendering it. The underscore prefix signals "internal use only — do not display."
 
 ### 7.3 Spelling Input
 
@@ -473,18 +477,20 @@ On game over, session score is compared to the stored high score. If beaten, the
 
 ## 8. Client-Side State
 
-All state lives in the browser. No server-side sessions, no cookies, no authentication.
+All state lives in the browser via Svelte writable stores. No server-side sessions, no cookies, no authentication.
 
 | State | Storage Location | Persists Across... |
 |-------|-----------------|-------------------|
-| Selected variant | `localStorage` | Page refresh, browser restart |
-| High score | `localStorage` | Page refresh, browser restart |
-| Earned achievements | `localStorage` (Set of achievement keys) | Page refresh, browser restart (forever) |
-| Session score | JavaScript variable | Lost on page refresh or game over |
-| Streak counter | JavaScript variable | Lost on page refresh or game over |
-| Current tier | Derived from streak (JS variable) | Lost on page refresh or game over |
-| Played word IDs | `Set<number>` in JS | Lost on page refresh or game over |
-| Current word spelling | JavaScript variable (never in DOM) | Erased after pronunciation and check |
+| Selected variant | `localStorage` (Svelte store `variant`) | Page refresh, browser restart |
+| High score | `localStorage` (Svelte store `highScore`) | Page refresh, browser restart |
+| Earned achievements | `localStorage` (Svelte store `achievements`) | Page refresh, browser restart (forever) |
+| Session score | Svelte store `sessionScore` | Lost on page refresh or game over |
+| Streak counter | Svelte store `streak` | Lost on page refresh or game over |
+| Current tier | Derived from `streak` via `getTierFromStreak()` | Lost on page refresh or game over |
+| Played word IDs | Svelte store `playedIds` (`Set<number>`) | Lost on page refresh or game over |
+| Current word data | Svelte store `currentWord` (id, definition, _spelling, _obscurity, _length) | Lost on page refresh or game over |
+| Game state | Svelte store `gameState` (`'variant-select'` / `'loading'` / `'playing'` / `'checking'` / `'wrong'` / `'game-over'`) | Resets on game over |
+| Current attempt | Svelte store `currentAttempt` (1 or 2) | Resets per word |
 
 ---
 
@@ -541,78 +547,91 @@ The D1 table can be extended at any time via `wrangler d1 execute` or a migratio
 
 Build output is static (no SSR needed) — deployed as a standard Pages static site with Functions for the API layer.
 
-### 11.3 Project Structure (Proposed)
+### 11.3 Project Structure
 
 ```
 spelling_bee/
 ├── SPEC.md                     # This document
+├── DEPLOY.md                   # Deployment checklist
 ├── wrangler.jsonc              # Pages + D1 configuration
 ├── package.json
 ├── svelte.config.js
 ├── vite.config.ts
+├── tsconfig.json
 ├── src/
 │   ├── app.html                # Svelte shell (mount point)
 │   ├── app.css                 # Global styles, CSS custom properties
 │   ├── lib/
-│   │   ├── api.ts              # /api/word and /api/check fetch wrappers
-│   │   ├── game.ts             # Scoring engine, tier logic, constants
-│   │   ├── speech.ts           # Web Speech API wrapper (pronunciation)
-│   │   └── storage.ts          # localStorage helpers (high score, achievements, variant)
+│   │   ├── api.ts              # Typed fetch wrappers for /api/word, /api/check, /api/report
+│   │   ├── game.ts             # Scoring engine, tier logic, rank titles, achievement evaluation
+│   │   ├── speech.ts           # Web Speech API wrapper (speakWord)
+│   │   ├── storage.ts          # localStorage helpers + export/import
+│   │   └── stores.ts           # Svelte writable stores (10 stores, 3 persisted)
 │   ├── routes/
-│   │   └── +page.svelte        # Main game page (single-page app with screen switching)
+│   │   ├── +layout.svelte      # Root layout (imports app.css globally)
+│   │   └── +page.svelte        # Main game page: state machine, component wiring
 │   └── components/
 │       ├── VariantSelect.svelte
-│       ├── GameScreen.svelte
-│       ├── GameOverScreen.svelte
 │       ├── DefinitionDisplay.svelte
 │       ├── PronounceButton.svelte
 │       ├── SpellingInput.svelte
 │       ├── ScoreBoard.svelte
 │       ├── TierIndicator.svelte
-│       ├── RankBadge.svelte
-│       └── AchievementToast.svelte
+│       ├── GameOverScreen.svelte
+│       ├── AchievementToast.svelte
+│       ├── ReportSheet.svelte
+│       └── SettingsSheet.svelte
 ├── functions/                  # Pages Functions (API)
 │   └── api/
 │       ├── word.ts             # GET /api/word
 │       ├── check.ts            # POST /api/check
 │       └── report.ts           # POST /api/report
-├── migrations/                 # D1 migrations
-│   └── 0001_create_words.sql
-└── seed/                       # Word list seeding scripts
-    └── seed.sql
 ├── migrations/
 │   ├── 0001_create_words.sql
 │   └── 0002_create_reports.sql
+└── seed/
+    └── seed.sql
 ```
 
 ### 11.4 Svelte-Specific Design Decisions
 
-- **Single-page app**: The game has three screens (VariantSelect, Game, GameOver) but only one route. Screen switching is done via a reactive `currentScreen` variable, not SvelteKit routing. This keeps the entire game state in memory without page navigations.
-- **Stores for cross-component state**: Svelte writable stores for `sessionScore`, `highScore`, `streak`, `tier`, `playedIds`, and `achievements`. Components subscribe reactively.
-- **Transitions**: `fly` for tier-up toasts, `scale` for game-over overlay, a custom `shake` transition for wrong answers, `confetti` effect for new high score.
-- **Static adapter**: `@sveltejs/adapter-static` — builds to a `build/` directory that gets deployed to Cloudflare Pages.
+- **Svelte 5 + legacy compatibility**: The project uses Svelte 5.56 with `compilerOptions.compatibility.componentApi: 4`. A few components use native Svelte 5 patterns (`$state()`, `$props()`, `onclick=`) where the legacy `createEventDispatcher` pattern proved incompatible.
+- **Single-page app**: The game has three screens (VariantSelect, Game, GameOver) plus overlays (Settings, Report) but only one route. Screen switching is driven by the `$gameState` Svelte store, not SvelteKit routing. This keeps game state in memory without page navigations.
+- **Stores for cross-component state**: Svelte writable stores for `sessionScore`, `highScore`, `streak`, `tier`, `playedIds`, `achievements`, `variant`, `gameState`, `currentWord`, and `currentAttempt`. Components receive data as props where possible; only screen-level components (VariantSelect, SettingsSheet) write to stores.
+- **Transitions**: `fly` for tier-up toasts, `slide` for bottom sheets and game-over overlay, `fade` for backdrop, CSS `@keyframes` for shake, pulse, confetti, and shimmer effects.
+- **Static adapter**: `@sveltejs/adapter-static` — builds to a `build/` directory deployed to Cloudflare Pages.
+- **`+layout.svelte`**: Required to import `app.css` globally so CSS custom properties (`--color-primary`, `--font-size-2xl`, etc.) are available to all components.
 
 ### 11.5 Deployment Commands
 
 ```bash
-# Local development (SvelteKit + Pages Functions)
-npx wrangler pages dev build -- npm run dev
+# Local development
+npm run build
+npx wrangler pages dev build --d1=DB
 
 # Build static output
 npm run build
 
-# Create D1 database
+# Create D1 database (first deploy only)
 npx wrangler d1 create spelling-bee-db
 
-# Apply migrations
+# Apply migrations (local dev)
+npx wrangler d1 migrations apply spelling-bee-db --local
+
+# Seed word list (local dev)
+npx wrangler d1 execute spelling-bee-db --local --file=seed/seed.sql
+
+# Apply migrations (production)
 npx wrangler d1 migrations apply spelling-bee-db --remote
 
-# Seed word list
+# Seed word list (production)
 npx wrangler d1 execute spelling-bee-db --remote --file=seed/seed.sql
 
 # Deploy to Cloudflare Pages
 npx wrangler pages deploy build --project-name=spelling-bee
 ```
+
+**Note**: The `wrangler.jsonc` omits `database_id` — both local and remote databases auto-provision from `database_name`. For local dev, `pages dev` and `d1 execute` share the same `.wrangler/state` directory when `database_id` is absent.
 
 ---
 
@@ -700,7 +719,7 @@ The following items are intentionally deferred for future consideration or discu
 
 | # | Decision | Options | Status |
 |---|----------|---------|--------|
-| 1 | **Difficult words after wrong attempt** — On a wrong first attempt, should the second-attempt word be the same word or a new, easier word? | A) Same word (current spec) / B) New, 1-tier-lower word | Deferred |
+| 1 | **Difficult words after wrong attempt** — On a wrong first attempt, should the second-attempt word be the same word or a new, easier word? | A) Same word (current spec) / B) New, 1-tier-lower word | **Implemented: A** |
 | 2 | **Leaderboard + SSO** — Global leaderboard with Google/Apple sign-in? | A) Yes, with user accounts / B) No, keep it local-only | Deferred to v2 |
 | 3 | **Timer per word** — Add a time pressure element? | A) Yes, configurable countdown / B) No timer | Deferred |
 | 4 | **Daily challenge** — A fixed word sequence for all players each day? | A) Yes, seed-based deterministic shuffle / B) Always random | Deferred |
