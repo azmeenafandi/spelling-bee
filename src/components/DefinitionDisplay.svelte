@@ -40,6 +40,8 @@
     text-align: center;
     color: var(--color-text-primary);
     padding-right: var(--space-6);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 
   .report-flag {

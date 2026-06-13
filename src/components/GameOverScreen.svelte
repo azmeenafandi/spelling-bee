@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
-  import { fade } from 'svelte/transition';
+  import { fade, fly } from 'svelte/transition';
   import type { RankEntry } from '$lib/game';
 
   export let sessionScore: number;
@@ -69,7 +69,7 @@
     </div>
   {/if}
 
-  <div class="sheet">
+  <div class="sheet" transition:fly={{ y: 80, duration: 400, delay: 50 }}>
     <h1 class="heading">Game Over</h1>
 
     <div class="answer-section">

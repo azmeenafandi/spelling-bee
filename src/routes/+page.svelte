@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fade, slide } from 'svelte/transition';
+  import { fade, fly, slide } from 'svelte/transition';
 
   // ── Components ──
   import VariantSelect from '../components/VariantSelect.svelte';
@@ -48,6 +48,9 @@
   let gameOverAnswer = '';
   let poolExhausted = false;
   let consecutiveFirstAttempt = 0;
+  let correctFlash: 'green' | 'amber' | null = null;
+  let showPhew = false;
+  let tierToastVisible = false;
   let newSessionAchievements: Array<{
     key: string;
     name: string;
@@ -76,12 +79,29 @@
   // Tier-up animation detection
   let previousTier = 1;
 
+  const TIER_NAMES: Record<number, string> = {
+    1: 'The Beginning',
+    2: 'Heating Up',
+    3: 'Wordsmith Territory',
+    4: 'Expert Zone',
+    5: 'The Deep End',
+    6: "Lexicographer's Domain",
+  };
+
+  function getTierName(tier: number): string {
+    return TIER_NAMES[tier] ?? '';
+  }
+
   $: if (currentTierValue > previousTier) {
     tierAnimating = true;
+    tierToastVisible = true;
     previousTier = currentTierValue;
     setTimeout(() => {
       tierAnimating = false;
     }, 800);
+    setTimeout(() => {
+      tierToastVisible = false;
+    }, 2500);
   }
 
   // ── Constants ──
@@ -231,6 +251,8 @@
       $currentAttempt,
     );
 
+    const wasSecondAttempt = $currentAttempt === 2;
+
     // Update session score
     $sessionScore += points;
 
@@ -283,11 +305,19 @@
       queueAchievements(newAchievements);
     }
 
+    // Visual feedback: green flash for 1st attempt, amber for 2nd
+    correctFlash = wasSecondAttempt ? 'amber' : 'green';
+    showPhew = wasSecondAttempt;
+
     // Reset attempt for next word
     $currentAttempt = 1;
 
-    // Load next word
-    loadWord();
+    // Load next word after brief delay so user sees feedback
+    setTimeout(() => {
+      correctFlash = null;
+      showPhew = false;
+      loadWord();
+    }, 500);
   }
 
   // ── Core: Wrong First Attempt ──
@@ -325,6 +355,9 @@
     gameOverAnswer = '';
     poolExhausted = false;
     consecutiveFirstAttempt = 0;
+    correctFlash = null;
+    showPhew = false;
+    tierToastVisible = false;
     newSessionAchievements = [];
     achievementQueue = [];
     currentToastAchievement = null;
@@ -419,12 +452,19 @@
         attempt={$currentAttempt}
         disabled={$gameState !== 'playing' && $gameState !== 'wrong'}
         error={inputError}
+        {correctFlash}
         on:spelling={handleCheck}
       />
 
       {#if $gameState === 'wrong' && !inputError}
         <p class="try-again-text" in:fade={{ duration: 200 }}>
           Try again — one attempt remaining
+        </p>
+      {/if}
+
+      {#if showPhew}
+        <p class="phew-text" in:fade={{ duration: 200 }}>
+          Phew! 😅
         </p>
       {/if}
     </div>
@@ -486,6 +526,17 @@
     on:close={() => (settingsOpen = false)}
   />
   <AchievementToast achievement={currentToastAchievement} />
+
+  {#if tierToastVisible}
+    <div
+      class="tier-toast"
+      transition:fly={{ y: -30, duration: 300 }}
+      role="status"
+      aria-live="polite"
+    >
+      ▲ Tier {currentTierValue} — {getTierName(currentTierValue)}
+    </div>
+  {/if}
 {/if}
 
 <!-- ===================================================================
@@ -609,6 +660,35 @@
     color: var(--color-error);
     font-weight: 600;
     text-align: center;
+  }
+
+  /* ── Phew text ── */
+  .phew-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-warning);
+    font-weight: 600;
+    text-align: center;
+  }
+
+  /* ── Tier toast ── */
+  .tier-toast {
+    position: fixed;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: #ffffff;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+    pointer-events: none;
+    max-width: calc(100vw - 2 * var(--space-4));
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* ── Error banner ── */
@@ -762,8 +842,6 @@
     .settings-btn {
       top: var(--space-3);
       right: var(--space-3);
-      width: 40px;
-      height: 40px;
     }
 
     .pool-card {
@@ -772,6 +850,42 @@
 
     .pool-heading {
       font-size: var(--font-size-xl);
+    }
+
+    .tier-toast {
+      font-size: var(--font-size-xs);
+      padding: var(--space-2) var(--space-4);
+      top: 56px;
+    }
+  }
+
+  @media (max-width: 320px) {
+    .game-container {
+      padding: var(--space-2);
+      gap: var(--space-2);
+    }
+
+    .settings-btn {
+      top: var(--space-2);
+      right: var(--space-2);
+    }
+
+    .pool-card {
+      padding: var(--space-5) var(--space-3);
+    }
+
+    .pool-heading {
+      font-size: var(--font-size-lg);
+    }
+
+    .pool-score-value {
+      font-size: var(--font-size-xl);
+    }
+
+    .tier-toast {
+      font-size: 0.7rem;
+      padding: var(--space-2) var(--space-3);
+      top: 52px;
     }
   }
 </style>

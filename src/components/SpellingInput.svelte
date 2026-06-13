@@ -4,6 +4,7 @@
   export let attempt: number = 1;
   export let disabled: boolean = false;
   export let error: boolean = false;
+  export let correctFlash: 'green' | 'amber' | null = null;
 
   const dispatch = createEventDispatcher<{ spelling: string }>();
 
@@ -44,7 +45,7 @@
   }
 </script>
 
-<div class="input-wrapper" class:error={shake}>
+<div class="input-wrapper" class:error={shake} class:correct-green={correctFlash === 'green'} class:correct-amber={correctFlash === 'amber'}>
   <input
     bind:this={inputEl}
     type="text"
@@ -97,6 +98,16 @@
     animation: shake 0.5s ease-in-out;
   }
 
+  .correct-green .spelling-input {
+    border-color: var(--color-success);
+    animation: flashGreen 0.5s ease forwards;
+  }
+
+  .correct-amber .spelling-input {
+    border-color: var(--color-warning);
+    animation: flashAmber 0.5s ease forwards;
+  }
+
   @keyframes shake {
     0%,
     100% {
@@ -110,6 +121,28 @@
     30%,
     70% {
       transform: translateX(6px);
+    }
+  }
+
+  @keyframes flashGreen {
+    0% {
+      border-color: var(--color-success);
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.3);
+    }
+    100% {
+      border-color: var(--color-text-secondary);
+      box-shadow: none;
+    }
+  }
+
+  @keyframes flashAmber {
+    0% {
+      border-color: var(--color-warning);
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.3);
+    }
+    100% {
+      border-color: var(--color-text-secondary);
+      box-shadow: none;
     }
   }
 

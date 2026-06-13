@@ -67,15 +67,9 @@ body {
   background: var(--color-background);
   color: var(--color-text-primary);
   min-height: 100dvh;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ------------------------------------------------------------------
-   App Container — mobile-first, single column, capped width
-   ------------------------------------------------------------------ */
-.app {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: var(--space-4);
-}
+

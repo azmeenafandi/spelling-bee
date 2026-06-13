@@ -1,12 +1,9 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { speakWord } from '$lib/speech';
 
   export let spelling: string;
   export let lang: 'en-GB' | 'en-US' = 'en-GB';
   export let disabled: boolean = false;
-
-  const dispatch = createEventDispatcher<{ speaking: void; done: void }>();
 
   $: speechSupported =
     typeof window !== 'undefined' && 'speechSynthesis' in window;
@@ -17,7 +14,6 @@
     if (disabled || speaking || !speechSupported) return;
 
     speaking = true;
-    dispatch('speaking');
 
     try {
       await speakWord(spelling, lang);
@@ -25,7 +21,6 @@
       // Speech error — silently recover
     } finally {
       speaking = false;
-      dispatch('done');
     }
   }
 </script>
