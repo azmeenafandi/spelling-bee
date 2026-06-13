@@ -13,6 +13,8 @@ export interface WordResponse {
   id: number;
   definition: string;
   _spelling: string;
+  _obscurity: number;
+  _length: number;
 }
 
 export interface CheckResponse {

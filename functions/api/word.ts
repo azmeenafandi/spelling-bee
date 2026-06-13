@@ -81,7 +81,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
     // ── Build parameterised query ──
     // Base query — we use positional ? placeholders and bind in order.
     let sql =
-      'SELECT id, definition, spelling AS _spelling ' +
+      'SELECT id, definition, spelling AS _spelling, obscurity AS _obscurity, length AS _length ' +
       'FROM words ' +
       'WHERE variant IN (?, \'both\') ' +
       'AND length >= ? ' +
@@ -106,6 +106,8 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
       id: number;
       definition: string;
       _spelling: string;
+      _obscurity: number;
+      _length: number;
     }>();
 
     if (!row) {
@@ -116,7 +118,13 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
     }
 
     return new Response(
-      JSON.stringify({ id: row.id, definition: row.definition, _spelling: row._spelling }),
+      JSON.stringify({
+        id: row.id,
+        definition: row.definition,
+        _spelling: row._spelling,
+        _obscurity: row._obscurity,
+        _length: row._length,
+      }),
       { status: 200, headers: JSON_HEADERS }
     );
   } catch (err) {

@@ -65,6 +65,8 @@ export const currentWord = writable<{
   id: number;
   definition: string;
   _spelling: string;
+  _obscurity: number;
+  _length: number;
 } | null>(null);
 
 /**
@@ -76,7 +78,7 @@ export const currentWord = writable<{
  * game-over → variant-select (Play Again)
  */
 export const gameState = writable<
-  'variant-select' | 'playing' | 'checking' | 'wrong' | 'game-over'
+  'variant-select' | 'loading' | 'playing' | 'checking' | 'wrong' | 'game-over'
 >('variant-select');
 
 /** Which attempt the player is on for the current word (1 or 2). */
