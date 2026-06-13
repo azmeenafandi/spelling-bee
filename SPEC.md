@@ -722,4 +722,4 @@ The following items are intentionally deferred for future consideration or discu
 | 1 | **Difficult words after wrong attempt** — On a wrong first attempt, should the second-attempt word be the same word or a new, easier word? | A) Same word (current spec) / B) New, 1-tier-lower word | **Implemented: A** |
 | 2 | **Leaderboard + SSO** — Global leaderboard with Google/Apple sign-in? | A) Yes, with user accounts / B) No, keep it local-only | Deferred to v2 |
 | 3 | **Timer per word** — Add a time pressure element? | A) Yes, configurable countdown / B) No timer | Deferred |
-| 4 | **Daily challenge** — A fixed word sequence for all players each day? | A) Yes, seed-based deterministic shuffle / B) Always random | Deferred |
+| 4 | **TTS pronunciation quality** — Improve pronunciation of complex words via better voice selection, slower rate for long words, and optional phonetic hints | A) Client-side voice/rate tuning / B) Phonetic column in DB / C) Both | **Deferred** — see src/lib/speech.ts |

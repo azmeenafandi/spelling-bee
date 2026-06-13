@@ -1,16 +1,13 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "spelling-bee",
-  "compatibility_date": "2026-06-13",
-  "pages_build_output_dir": "build",
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "spelling-bee-db"
-    }
-  ],
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 0.1
-  }
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "spelling-bee",
+	"compatibility_date": "2026-06-13",
+	"pages_build_output_dir": "build",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "spelling-bee-db",
+			"database_id": "289e361f-2813-48f4-a69f-b88baa2c693a"
+		}
+	]
 }
