@@ -28,6 +28,7 @@
 <style>
   .definition-card {
     position: relative;
+    width: 100%;
     background: var(--color-surface);
     border-radius: var(--radius);
     padding: var(--space-6) var(--space-6) var(--space-5);

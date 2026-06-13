@@ -40,6 +40,7 @@
 <style>
   .pronounce-btn {
     display: inline-flex;
+    align-self: center;
     align-items: center;
     gap: var(--space-2);
     background: var(--color-surface);
