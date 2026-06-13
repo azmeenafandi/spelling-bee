@@ -1,1 +1,81 @@
-/* Design tokens and global styles — to be filled in Phase 3 */
+/* ===================================================================
+   Spelling Bee — Design Tokens & Global Styles
+   Mobile-first. No decorative flourishes — functional by design.
+   =================================================================== */
+
+/* ------------------------------------------------------------------
+   Design Tokens (CSS Custom Properties)
+   ------------------------------------------------------------------ */
+:root {
+  /* Colours */
+  --color-primary: #2563eb;
+  --color-secondary: #7c3aed;
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-warning: #d97706;
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #64748b;
+
+  /* Typography */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  --font-size-xs: 0.875rem;   /* 14px */
+  --font-size-sm: 1rem;       /* 16px */
+  --font-size-md: 1.125rem;   /* 18px */
+  --font-size-lg: 1.25rem;    /* 20px */
+  --font-size-xl: 1.5rem;     /* 24px */
+  --font-size-2xl: 2rem;      /* 32px */
+  --line-height: 1.5;
+
+  /* Spacing (4px increments) */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-7: 1.75rem;   /* 28px */
+  --space-8: 2rem;      /* 32px */
+
+  /* Shape */
+  --radius: 0.5rem;
+
+  /* Motion */
+  --transition: 200ms ease;
+}
+
+/* ------------------------------------------------------------------
+   Global Reset
+   ------------------------------------------------------------------ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ------------------------------------------------------------------
+   Body
+   ------------------------------------------------------------------ */
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ------------------------------------------------------------------
+   App Container — mobile-first, single column, capped width
+   ------------------------------------------------------------------ */
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
