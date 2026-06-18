@@ -58,6 +58,13 @@
     class="spelling-input"
     aria-label="Type your spelling"
   />
+  {#if correctFlash === 'green'}
+    <span class="status-icon correct" aria-label="Correct">✓</span>
+  {:else if correctFlash === 'amber'}
+    <span class="status-icon warning" aria-label="Correct on second try">⚠</span>
+  {:else if shake}
+    <span class="status-icon error" aria-label="Incorrect">✗</span>
+  {/if}
 </div>
 
 <style>
@@ -81,6 +88,49 @@
 
   .spelling-input::placeholder {
     color: var(--color-text-secondary);
+  }
+
+  .status-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    line-height: 1;
+    opacity: 0;
+    animation: iconFadeIn 0.5s ease forwards;
+    pointer-events: none;
+  }
+
+  .status-icon.correct {
+    color: var(--color-success);
+  }
+
+  .status-icon.warning {
+    color: var(--color-warning);
+  }
+
+  .status-icon.error {
+    color: var(--color-error);
+  }
+
+  @keyframes iconFadeIn {
+    0% {
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .status-icon {
+      animation: none;
+      opacity: 1;
+    }
   }
 
   .spelling-input:focus {
