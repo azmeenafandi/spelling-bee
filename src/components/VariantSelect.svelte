@@ -1,7 +1,7 @@
 <script lang="ts">
   import { variant } from '$lib/stores';
 
-  let { onStart }: { onStart: () => void } = $props();
+  let { onStart, children }: { onStart: () => void; children?: () => any } = $props();
 
   let selected: 'british' | 'american' | null = $state($variant || null);
 
@@ -48,6 +48,12 @@
       <span class="card-label">American English</span>
     </button>
   </div>
+
+  {#if children}
+    <div class="daily-slot">
+      {@render children()}
+    </div>
+  {/if}
 
   <button
     class="start-btn"
@@ -171,6 +177,11 @@
 
   .start-btn:not(:disabled):hover {
     transform: translateY(-1px);
+  }
+
+  .daily-slot {
+    width: 100%;
+    max-width: 360px;
   }
 
   @media (max-width: 375px) {

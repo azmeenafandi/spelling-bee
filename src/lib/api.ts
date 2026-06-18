@@ -85,3 +85,14 @@ export async function reportIssue(body: {
     body: JSON.stringify(body),
   });
 }
+
+export interface DailyResponse extends WordResponse {
+  date: string;
+}
+
+export async function fetchDaily(
+  variant: string
+): Promise<DailyResponse> {
+  const qs = new URLSearchParams({ variant });
+  return request<DailyResponse>(`/api/daily?${qs}`);
+}

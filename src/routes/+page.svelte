@@ -14,6 +14,7 @@
   import AchievementToast from '../components/AchievementToast.svelte';
   import ReportSheet from '../components/ReportSheet.svelte';
   import SettingsSheet from '../components/SettingsSheet.svelte';
+  import DailyChallenge from '../components/DailyChallenge.svelte';
 
   // ── Lib ──
   import { fetchWord, checkSpelling } from '$lib/api';
@@ -37,6 +38,15 @@
     gameState,
     currentAttempt,
   } from '$lib/stores';
+  import {
+    initAudio,
+    playCorrect,
+    playWrong,
+    playTierUp,
+    playGameOver,
+    playAchievement,
+    triggerHaptic,
+  } from '$lib/audio';
 
   // ── Local state ──
   let isLoading = false;
@@ -44,6 +54,7 @@
   let errorMessage: string | null = null;
   let settingsOpen = false;
   let reportOpen = false;
+  let dailyOpen = false;
   let reportWordId = 0;
   let isNewHighScore = false;
   let tierAnimating = false;
@@ -79,6 +90,11 @@
   $: nextTierAt = getNextTierAt(currentTierValue);
 
   // Tier-up animation detection
+  // Attempt tracking for share card
+  let wordsAttempted = 0;
+  let wordsCorrect = 0;
+  let attemptPattern: Array<'correct' | 'second' | 'wrong'> = [];
+
   let previousTier = 1;
 
   const TIER_NAMES: Record<number, string> = {
@@ -98,6 +114,8 @@
     tierAnimating = true;
     tierToastVisible = true;
     previousTier = currentTierValue;
+    playTierUp();
+    triggerHaptic();
     setTimeout(() => {
       tierAnimating = false;
     }, 800);
@@ -245,6 +263,11 @@
   function handleCorrectAnswer() {
     if (!$currentWord) return;
 
+    // Track attempt outcome for share card
+    wordsAttempted += 1;
+    wordsCorrect += 1;
+    attemptPattern = [...attemptPattern, $currentAttempt === 1 ? 'correct' : 'second'];
+
     // Calculate score
     const points = calculateScore(
       $currentWord._obscurity,
@@ -305,11 +328,18 @@
 
       // Queue toast notifications
       queueAchievements(newAchievements);
+
+      // Sound for achievement
+      playAchievement();
     }
 
     // Visual feedback: green flash for 1st attempt, amber for 2nd
     correctFlash = wasSecondAttempt ? 'amber' : 'green';
     showPhew = wasSecondAttempt;
+
+    // Sound + haptic
+    playCorrect();
+    triggerHaptic();
 
     // Reset attempt for next word
     $currentAttempt = 1;
@@ -327,15 +357,22 @@
     $currentAttempt = 2;
     $gameState = 'wrong';
     inputError = true;
+    playWrong();
+    triggerHaptic();
     setTimeout(() => {
       inputError = false;
     }, 500);
   }
 
   // ── Core: Wrong Second Attempt → Game Over ──
-  function handleWrongSecondAttempt(answer: string) {
-    gameOverAnswer = answer;
+  function handleWrongSecondAttempt(ans: string) {
+    gameOverAnswer = ans;
     $gameState = 'game-over';
+
+    // Track attempt outcome for share card
+    wordsAttempted += 1;
+    attemptPattern = [...attemptPattern, 'wrong'];
+    playGameOver();
 
     // Check high score
     if ($sessionScore > $highScore) {
@@ -368,15 +405,30 @@
     inputError = false;
     previousTier = 1;
     tierAnimating = false;
+    wordsAttempted = 0;
+    wordsCorrect = 0;
+    attemptPattern = [];
   }
 
   // ── Event Handlers ──
+  let audioInitialised = false;
+
+  function ensureAudio() {
+    if (!audioInitialised) {
+      initAudio();
+      audioInitialised = true;
+    }
+  }
+
   function handleStart() {
+    ensureAudio();
     resetSessionState();
+    dailyOpen = false;
     loadWord();
   }
 
   function handleRestart() {
+    ensureAudio();
     resetSessionState();
     $gameState = 'variant-select';
   }
@@ -400,7 +452,11 @@
      =================================================================== -->
 
 {#if $gameState === 'variant-select'}
-  <VariantSelect onStart={handleStart} />
+  <VariantSelect onStart={handleStart}>
+    <button class="daily-btn" on:click={() => (dailyOpen = true)}>
+      🐝 Daily Challenge
+    </button>
+  </VariantSelect>
 {:else}
   <div class="game-container">
     <!-- Settings button -->
@@ -505,6 +561,11 @@
         {rank}
         newAchievements={newSessionAchievements}
         wordId={$currentWord?.id ?? 0}
+        wordsTotal={wordsAttempted}
+        wordsCorrect={wordsCorrect}
+        {attemptPattern}
+        streak={$streak}
+        tier={currentTierValue}
         on:restart={handleRestart}
         on:report={(e) => handleReport(e.detail)}
       />
@@ -529,6 +590,9 @@
     open={settingsOpen}
     on:close={() => (settingsOpen = false)}
   />
+  {#if dailyOpen}
+    <DailyChallenge on:close={() => (dailyOpen = false)} />
+  {/if}
   <AchievementToast achievement={currentToastAchievement} />
 
   {#if tierToastVisible}
@@ -848,6 +912,32 @@
   }
 
   .play-again-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .daily-btn {
+    width: 100%;
+    padding: var(--space-4);
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    border: 1px solid color-mix(in oklch, var(--color-text-secondary) 30%, transparent);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform var(--transition), background var(--transition);
+    min-height: 52px;
+    margin-top: var(--space-2);
+  }
+
+  .daily-btn:hover {
+    transform: translateY(-1px);
+    background: color-mix(in oklch, var(--color-background) 90%, var(--color-primary));
+  }
+
+  .daily-btn:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }

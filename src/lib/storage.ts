@@ -11,6 +11,7 @@ const KEYS = {
   variant: 'spelling-bee:variant',
   highScore: 'spelling-bee:high-score',
   achievements: 'spelling-bee:achievements',
+  dailyResult: 'spelling-bee:daily-result',
 } as const;
 
 type Variant = 'british' | 'american';
@@ -28,6 +29,46 @@ export function loadPersistedState(): {
   const highScore = readHighScore();
   const achievements = readAchievements();
   return { variant, highScore, achievements };
+}
+
+// ── Daily result persistence ──
+// Stored as { [date: string]: boolean } where true = correct
+
+type DailyResults = Record<string, boolean>;
+
+function readDailyResults(): DailyResults {
+  try {
+    const raw = localStorage.getItem(KEYS.dailyResult);
+    if (raw !== null) {
+      const obj = JSON.parse(raw);
+      if (typeof obj === 'object' && obj !== null) return obj as DailyResults;
+    }
+  } catch {
+    /* unavailable */
+  }
+  return {};
+}
+
+function writeDailyResults(data: DailyResults): void {
+  try {
+    localStorage.setItem(KEYS.dailyResult, JSON.stringify(data));
+  } catch {
+    /* silent */
+  }
+}
+
+/** Save whether the player got today's daily word right or wrong. */
+export function saveDailyResult(date: string, correct: boolean): void {
+  const results = readDailyResults();
+  results[date] = correct;
+  writeDailyResults(results);
+}
+
+/** Return true (correct), false (wrong), or null (not attempted). */
+export function getDailyResult(date: string): boolean | null {
+  const results = readDailyResults();
+  if (date in results) return results[date];
+  return null;
 }
 
 export function saveVariant(v: Variant): void {

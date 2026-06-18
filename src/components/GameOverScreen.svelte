@@ -2,6 +2,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import { fade, fly } from 'svelte/transition';
   import type { RankEntry } from '$lib/game';
+  import { generateGameShareCard, copyToClipboard } from '$lib/share';
 
   export let sessionScore: number;
   export let highScore: number;
@@ -10,8 +11,16 @@
   export let rank: RankEntry;
   export let newAchievements: Array<{ key: string; name: string; emoji: string }> = [];
   export let wordId: number;
+  export let wordsTotal: number = 0;
+  export let wordsCorrect: number = 0;
+  export let attemptPattern: Array<'correct' | 'second' | 'wrong'> = [];
+  export let streak: number = 0;
+  export let tier: number = 1;
 
   const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let shareCopied = false;
+  let shareTimeout: ReturnType<typeof setTimeout> | undefined;
 
   const dispatch = createEventDispatcher<{
     restart: void;
@@ -48,6 +57,27 @@
 
   function handleRestart() {
     dispatch('restart');
+  }
+
+  async function handleShare() {
+    const card = generateGameShareCard({
+      date: new Date().toISOString().slice(0, 10),
+      score: sessionScore,
+      rank: `${rank.emoji} ${rank.title}`,
+      streak: streak,
+      tier: tier,
+      wordsAttempted: wordsTotal,
+      wordsCorrect: wordsCorrect,
+      attemptPattern,
+    });
+    const ok = await copyToClipboard(card);
+    if (ok) {
+      shareCopied = true;
+      clearTimeout(shareTimeout);
+      shareTimeout = setTimeout(() => {
+        shareCopied = false;
+      }, 2000);
+    }
   }
 
   $: pointsBehind = Math.max(0, highScore - sessionScore);
@@ -108,6 +138,10 @@
 
     <button class="play-again-btn" on:click={handleRestart}>
       Play Again
+    </button>
+
+    <button class="share-btn" on:click={handleShare}>
+      📤 {shareCopied ? 'Copied!' : 'Share Results'}
     </button>
   </div>
 </div>
@@ -339,6 +373,31 @@
   }
 
   .play-again-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .share-btn {
+    width: 100%;
+    padding: var(--space-4);
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    border: 1px solid color-mix(in oklch, var(--color-text-secondary) 30%, transparent);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform var(--transition), background var(--transition);
+    min-height: 52px;
+  }
+
+  .share-btn:hover {
+    transform: translateY(-1px);
+    background: color-mix(in oklch, var(--color-background) 90%, var(--color-primary));
+  }
+
+  .share-btn:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
