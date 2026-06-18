@@ -111,13 +111,13 @@
 
   @keyframes shimmerGlow {
     0% {
-      box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+      box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-primary) 0%, transparent);
     }
     30% {
-      box-shadow: 0 0 12px 2px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 0 12px 2px color-mix(in oklch, var(--color-primary) 30%, transparent);
     }
     100% {
-      box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+      box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-primary) 0%, transparent);
     }
   }
 

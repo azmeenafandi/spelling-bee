@@ -127,7 +127,7 @@
   @keyframes flashGreen {
     0% {
       border-color: var(--color-success);
-      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.3);
+      box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-success) 30%, transparent);
     }
     100% {
       border-color: var(--color-text-secondary);
@@ -138,7 +138,7 @@
   @keyframes flashAmber {
     0% {
       border-color: var(--color-warning);
-      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.3);
+      box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-warning) 30%, transparent);
     }
     100% {
       border-color: var(--color-text-secondary);

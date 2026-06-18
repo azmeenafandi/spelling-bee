@@ -328,7 +328,7 @@
     display: block;
     width: 22px;
     height: 22px;
-    background: #ffffff;
+    background: var(--color-surface);
     border-radius: 50%;
     position: absolute;
     top: 2px;
@@ -363,7 +363,7 @@
   }
 
   .action-btn:hover:not(:disabled) {
-    background: #e2e8f0;
+    background: var(--color-background);
   }
 
   .action-btn:focus-visible {
@@ -378,7 +378,7 @@
   }
 
   .action-btn.danger:hover:not(:disabled) {
-    background: #fef2f2;
+    background: color-mix(in oklch, var(--color-error) 8%, var(--color-surface));
   }
 
   .divider {
@@ -401,8 +401,8 @@
   }
 
   .confirm-banner {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    background: color-mix(in oklch, var(--color-error) 8%, var(--color-surface));
+    border: 1px solid color-mix(in oklch, var(--color-error) 25%, transparent);
     border-radius: var(--radius);
     padding: var(--space-3) var(--space-4);
     margin-top: var(--space-3);

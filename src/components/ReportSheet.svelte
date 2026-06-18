@@ -321,16 +321,16 @@
   }
 
   .btn-cancel:not(:disabled):hover {
-    background: #e2e8f0;
+    background: var(--color-background);
   }
 
   .btn-submit {
     background: var(--color-primary);
-    color: #ffffff;
+    color: var(--color-surface);
   }
 
   .btn-submit:not(:disabled):hover {
-    background: #1d4ed8;
+    background: color-mix(in oklch, var(--color-primary) 85%, black);
   }
 
   .confirmation {

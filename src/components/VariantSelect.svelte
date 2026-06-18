@@ -128,7 +128,7 @@
 
   .card.selected {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 15%, transparent);
   }
 
   .card-flag {
@@ -148,7 +148,7 @@
     max-width: 360px;
     padding: var(--space-4);
     background: var(--color-primary);
-    color: #ffffff;
+    color: var(--color-surface);
     border: none;
     border-radius: var(--radius);
     font-family: inherit;

@@ -25,7 +25,7 @@
     rotation: number;
   }> = [];
 
-  const CONFETTI_COLORS = ['#2563eb', '#7c3aed', '#16a34a', '#d97706', '#dc2626', '#ec4899'];
+  const CONFETTI_COLORS = ['var(--color-primary)', 'var(--color-secondary)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-error)', 'var(--color-secondary)'];
 
   onMount(() => {
     if (isNewHighScore) {
@@ -207,7 +207,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    background: linear-gradient(135deg, color-mix(in oklch, var(--color-warning) 15%, transparent), color-mix(in oklch, var(--color-secondary) 20%, transparent));
     padding: var(--space-3) var(--space-5);
     border-radius: var(--radius);
     animation: bannerPulse 1s ease-in-out infinite alternate;
@@ -221,7 +221,7 @@
   .high-score-text {
     font-size: var(--font-size-sm);
     font-weight: 700;
-    color: #92400e;
+    color: color-mix(in oklch, var(--color-secondary) 80%, black);
     letter-spacing: 0.03em;
   }
 
@@ -320,7 +320,7 @@
     width: 100%;
     padding: var(--space-4);
     background: var(--color-primary);
-    color: #ffffff;
+    color: var(--color-surface);
     border: none;
     border-radius: var(--radius);
     font-family: inherit;

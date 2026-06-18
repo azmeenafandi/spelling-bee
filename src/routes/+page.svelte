@@ -689,13 +689,13 @@
     transform: translateX(-50%);
     z-index: 200;
     background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-    color: #ffffff;
+    color: var(--color-surface);
     padding: var(--space-3) var(--space-5);
     border-radius: var(--radius);
     font-size: var(--font-size-sm);
     font-weight: 700;
     white-space: nowrap;
-    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     pointer-events: none;
     max-width: calc(100vw - 2 * var(--space-4));
     overflow: hidden;
@@ -713,19 +713,19 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--space-3) var(--space-4);
-    background: #fef2f2;
-    border-top: 1px solid #fecaca;
+    background: color-mix(in oklch, var(--color-error) 8%, var(--color-surface));
+    border-top: 1px solid color-mix(in oklch, var(--color-error) 25%, transparent);
   }
 
   .error-text {
     font-size: var(--font-size-sm);
-    color: #991b1b;
+    color: var(--color-error);
     flex: 1;
   }
 
   .retry-btn {
     padding: var(--space-2) var(--space-4);
-    background: #dc2626;
+    background: var(--color-error);
     color: white;
     border: none;
     border-radius: var(--radius);
@@ -739,11 +739,11 @@
   }
 
   .retry-btn:hover {
-    background: #b91c1c;
+    background: color-mix(in oklch, var(--color-error) 85%, black);
   }
 
   .retry-btn:focus-visible {
-    outline: 2px solid #dc2626;
+    outline: 2px solid var(--color-error);
     outline-offset: 2px;
   }
 
@@ -823,7 +823,7 @@
     width: 100%;
     padding: var(--space-4);
     background: var(--color-primary);
-    color: #ffffff;
+    color: var(--color-surface);
     border: none;
     border-radius: var(--radius);
     font-family: inherit;
