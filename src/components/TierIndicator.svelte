@@ -162,7 +162,7 @@
     }
 
     .tier-text {
-      font-size: 0.75rem;
+      font-size: var(--font-size-xs);
     }
 
     .progress-track {
@@ -170,7 +170,7 @@
     }
 
     .streak-info {
-      font-size: 0.75rem;
+      font-size: var(--font-size-xs);
     }
   }
 </style>

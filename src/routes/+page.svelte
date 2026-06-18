@@ -566,7 +566,7 @@
     position: fixed;
     top: var(--space-4);
     right: var(--space-4);
-    z-index: 50;
+    z-index: var(--z-sticky);
     background: var(--color-surface);
     border: 1px solid var(--color-background);
     border-radius: var(--radius);
@@ -696,7 +696,7 @@
     top: 64px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 200;
+    z-index: var(--z-toast);
     background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
     color: var(--color-surface);
     padding: var(--space-3) var(--space-5);
@@ -717,7 +717,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 90;
+    z-index: var(--z-sticky);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -760,7 +760,7 @@
   .overlay {
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: var(--z-overlay);
     display: flex;
     align-items: center;
     justify-content: center;

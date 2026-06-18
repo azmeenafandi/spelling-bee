@@ -133,7 +133,7 @@
   .overlay {
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: var(--z-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -348,7 +348,7 @@
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 101;
+    z-index: calc(var(--z-overlay) + 1);
     overflow: hidden;
   }
 

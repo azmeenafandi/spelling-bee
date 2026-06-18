@@ -44,6 +44,13 @@
 
   /* Motion — unchanged */
   --transition: 200ms ease;
+
+  /* Z-index scale */
+  --z-dropdown: 10;
+  --z-sticky: 50;
+  --z-overlay: 100;
+  --z-modal: 150;
+  --z-toast: 200;
 }
 
 /* ------------------------------------------------------------------

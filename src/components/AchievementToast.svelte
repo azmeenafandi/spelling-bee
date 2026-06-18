@@ -54,7 +54,7 @@
     top: var(--space-4);
     left: 50%;
     transform: translateX(-50%);
-    z-index: 200;
+    z-index: var(--z-toast);
     display: flex;
     align-items: center;
     gap: var(--space-2);
