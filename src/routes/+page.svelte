@@ -452,11 +452,11 @@
      =================================================================== -->
 
 {#if $gameState === 'variant-select'}
-  <VariantSelect onStart={handleStart}>
-    <button class="daily-btn" on:click={() => (dailyOpen = true)}>
-      🐝 Daily Challenge
-    </button>
-  </VariantSelect>
+  <VariantSelect onStart={handleStart} />
+
+  <button class="daily-btn" on:click={() => (dailyOpen = true)}>
+    🐝 Daily Challenge
+  </button>
 {:else}
   <div class="game-container">
     <!-- Settings button -->
@@ -590,9 +590,6 @@
     open={settingsOpen}
     on:close={() => (settingsOpen = false)}
   />
-  {#if dailyOpen}
-    <DailyChallenge on:close={() => (dailyOpen = false)} />
-  {/if}
   <AchievementToast achievement={currentToastAchievement} />
 
   {#if tierToastVisible}
@@ -605,6 +602,10 @@
       ▲ Tier {currentTierValue} — {getTierName(currentTierValue)}
     </div>
   {/if}
+{/if}
+
+{#if dailyOpen}
+  <DailyChallenge on:close={() => (dailyOpen = false)} />
 {/if}
 
 <!-- ===================================================================
