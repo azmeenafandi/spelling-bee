@@ -920,7 +920,7 @@
   .daily-btn {
     width: 100%;
     padding: var(--space-4);
-    background: var(--color-background);
+    background: var(--color-surface);
     color: var(--color-text-primary);
     border: 1px solid color-mix(in oklch, var(--color-text-secondary) 30%, transparent);
     border-radius: var(--radius);
@@ -935,7 +935,7 @@
 
   .daily-btn:hover {
     transform: translateY(-1px);
-    background: color-mix(in oklch, var(--color-background) 90%, var(--color-primary));
+    background: color-mix(in oklch, var(--color-primary) 8%, var(--color-surface));
   }
 
   .daily-btn:focus-visible {
