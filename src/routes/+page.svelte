@@ -454,11 +454,11 @@
      =================================================================== -->
 
 {#if $gameState === 'variant-select'}
-  <VariantSelect onStart={handleStart} />
-
-  <button class="daily-btn" onclick={() => (dailyOpen = true)}>
-    🐝 Daily Challenge
-  </button>
+  <VariantSelect onStart={handleStart}>
+    <button class="daily-btn" onclick={() => (dailyOpen = true)}>
+      🐝 Daily Challenge
+    </button>
+  </VariantSelect>
 {:else}
   <div class="game-container">
     <!-- Settings button -->
