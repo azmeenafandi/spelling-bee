@@ -66,11 +66,22 @@
     font-weight: 700;
     color: var(--color-text-primary);
     line-height: 1.2;
-    transition: transform 0.3s ease;
   }
 
-  .score-value.animate {
-    animation: scorePop 0.3s ease;
+  @media (prefers-reduced-motion: no-preference) {
+    .score-value {
+      transition: transform 0.3s ease;
+    }
+
+    .score-value.animate {
+      animation: scorePop 0.3s ease;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .score-value.animate {
+      animation: none;
+    }
   }
 
   .score-value.secondary {
@@ -103,15 +114,17 @@
     max-width: 100%;
   }
 
-  @keyframes scorePop {
-    0% {
-      transform: scale(1);
-    }
-    40% {
-      transform: scale(1.2);
-    }
-    100% {
-      transform: scale(1);
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes scorePop {
+      0% {
+        transform: scale(1);
+      }
+      40% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+      }
     }
   }
 

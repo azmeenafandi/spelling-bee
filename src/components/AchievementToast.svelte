@@ -4,6 +4,8 @@
 
   export let achievement: { key: string; name: string; emoji: string } | null = null;
 
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   let timer: ReturnType<typeof setTimeout> | undefined;
   let visible = false;
   let currentAchievement: { key: string; name: string; emoji: string } | null = null;
@@ -39,7 +41,7 @@
     class="toast"
     role="status"
     aria-live="polite"
-    transition:slide={{ duration: 300, axis: 'y' }}
+    transition:slide={{ duration: prefersReducedMotion ? 0 : 300, axis: 'y' }}
   >
     <span class="toast-emoji">{currentAchievement.emoji}</span>
     <span class="toast-name">{currentAchievement.name}</span>

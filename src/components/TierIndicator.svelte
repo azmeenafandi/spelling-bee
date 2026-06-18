@@ -53,11 +53,23 @@
     padding: var(--space-2) var(--space-4);
     background: var(--color-surface);
     border-radius: var(--radius);
-    transition: box-shadow 0.3s ease;
   }
 
-  .tier-strip.shimmer {
-    animation: shimmerGlow 0.8s ease;
+  @media (prefers-reduced-motion: no-preference) {
+    .tier-strip {
+      transition: box-shadow 0.3s ease;
+    }
+
+    .tier-strip.shimmer {
+      animation: shimmerGlow 0.8s ease;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tier-strip.shimmer {
+      animation: none;
+      box-shadow: none;
+    }
   }
 
   .tier-label {
@@ -97,8 +109,16 @@
     transition: width 0.4s ease;
   }
 
-  .progress-fill.animate {
-    animation: tierUpPulse 0.6s ease;
+  @media (prefers-reduced-motion: no-preference) {
+    .progress-fill.animate {
+      animation: tierUpPulse 0.6s ease;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .progress-fill.animate {
+      animation: none;
+    }
   }
 
   .streak-info {
@@ -109,27 +129,29 @@
     font-variant-numeric: tabular-nums;
   }
 
-  @keyframes shimmerGlow {
-    0% {
-      box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-primary) 0%, transparent);
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes shimmerGlow {
+      0% {
+        box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-primary) 0%, transparent);
+      }
+      30% {
+        box-shadow: 0 0 12px 2px color-mix(in oklch, var(--color-primary) 30%, transparent);
+      }
+      100% {
+        box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-primary) 0%, transparent);
+      }
     }
-    30% {
-      box-shadow: 0 0 12px 2px color-mix(in oklch, var(--color-primary) 30%, transparent);
-    }
-    100% {
-      box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-primary) 0%, transparent);
-    }
-  }
 
-  @keyframes tierUpPulse {
-    0% {
-      transform: scaleY(1);
-    }
-    40% {
-      transform: scaleY(1.8);
-    }
-    100% {
-      transform: scaleY(1);
+    @keyframes tierUpPulse {
+      0% {
+        transform: scaleY(1);
+      }
+      40% {
+        transform: scaleY(1.8);
+      }
+      100% {
+        transform: scaleY(1);
+      }
     }
   }
 

@@ -1,6 +1,8 @@
 <script lang="ts">
   import { fade, fly, slide } from 'svelte/transition';
 
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   // ── Components ──
   import VariantSelect from '../components/VariantSelect.svelte';
   import DefinitionDisplay from '../components/DefinitionDisplay.svelte';
@@ -475,7 +477,7 @@
   <!-- ── Game Over Overlay ── -->
   {#if $gameState === 'game-over'}
     {#if poolExhausted}
-      <div class="overlay" transition:fade={{ duration: 300 }}>
+      <div class="overlay" transition:fade={{ duration: prefersReducedMotion ? 0 : 300 }}>
         <div class="pool-card">
           <h2 class="pool-heading">🎉 Congratulations!</h2>
           <p class="pool-message">You've mastered all available words!</p>
@@ -511,7 +513,7 @@
 
   <!-- ── Error Banner ── -->
   {#if errorMessage}
-    <div class="error-banner" transition:slide={{ duration: 200 }}>
+    <div class="error-banner" transition:slide={{ duration: prefersReducedMotion ? 0 : 200 }}>
       <p class="error-text">{errorMessage}</p>
       <button class="retry-btn" on:click={handleRetry}>Retry</button>
     </div>
@@ -532,7 +534,7 @@
   {#if tierToastVisible}
     <div
       class="tier-toast"
-      transition:fly={{ y: -30, duration: 300 }}
+      transition:fly={{ y: prefersReducedMotion ? 0 : -30, duration: prefersReducedMotion ? 0 : 300 }}
       role="status"
       aria-live="polite"
     >
@@ -662,6 +664,13 @@
     }
     50% {
       opacity: 0.8;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-line,
+    .skeleton-btn {
+      animation: none;
     }
   }
 

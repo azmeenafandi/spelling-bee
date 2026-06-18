@@ -83,7 +83,13 @@
     opacity: 0.6;
     border-color: var(--color-secondary);
     color: var(--color-secondary);
-    animation: pulse 0.8s ease-in-out infinite;
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pronounce-btn.speaking {
+      animation: pulse 0.8s ease-in-out infinite;
+    }
   }
 
   .icon {
@@ -95,13 +101,15 @@
     font-size: var(--font-size-sm);
   }
 
-  @keyframes pulse {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.08);
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes pulse {
+      0%,
+      100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.08);
+      }
     }
   }
 

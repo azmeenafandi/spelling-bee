@@ -1,7 +1,9 @@
 .subagent-orchestration/
+.pi/
 node_modules/
 .wrangler/
 build/
 .svelte-kit/
 .DS_Store
 *.local
+dev.sh

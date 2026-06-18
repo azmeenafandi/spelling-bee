@@ -95,54 +95,82 @@
 
   .error .spelling-input {
     border-color: var(--color-error);
-    animation: shake 0.5s ease-in-out;
   }
 
   .correct-green .spelling-input {
     border-color: var(--color-success);
-    animation: flashGreen 0.5s ease forwards;
   }
 
   .correct-amber .spelling-input {
     border-color: var(--color-warning);
-    animation: flashAmber 0.5s ease forwards;
   }
 
-  @keyframes shake {
-    0%,
-    100% {
-      transform: translateX(0);
+  @media (prefers-reduced-motion: no-preference) {
+    .error .spelling-input {
+      animation: shake 0.5s ease-in-out;
     }
-    10%,
-    50%,
-    90% {
-      transform: translateX(-6px);
+
+    .correct-green .spelling-input {
+      animation: flashGreen 0.5s ease forwards;
     }
-    30%,
-    70% {
-      transform: translateX(6px);
+
+    .correct-amber .spelling-input {
+      animation: flashAmber 0.5s ease forwards;
+    }
+
+    @keyframes shake {
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+      10%,
+      50%,
+      90% {
+        transform: translateX(-6px);
+      }
+      30%,
+      70% {
+        transform: translateX(6px);
+      }
+    }
+
+    @keyframes flashGreen {
+      0% {
+        border-color: var(--color-success);
+        box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-success) 30%, transparent);
+      }
+      100% {
+        border-color: var(--color-text-secondary);
+        box-shadow: none;
+      }
+    }
+
+    @keyframes flashAmber {
+      0% {
+        border-color: var(--color-warning);
+        box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-warning) 30%, transparent);
+      }
+      100% {
+        border-color: var(--color-text-secondary);
+        box-shadow: none;
+      }
     }
   }
 
-  @keyframes flashGreen {
-    0% {
+  @media (prefers-reduced-motion: reduce) {
+    .error .spelling-input {
+      border-color: var(--color-error);
+      animation: none;
+    }
+
+    .correct-green .spelling-input {
       border-color: var(--color-success);
-      box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-success) 30%, transparent);
+      animation: none;
     }
-    100% {
-      border-color: var(--color-text-secondary);
-      box-shadow: none;
-    }
-  }
 
-  @keyframes flashAmber {
-    0% {
+    .correct-amber .spelling-input {
       border-color: var(--color-warning);
-      box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-warning) 30%, transparent);
-    }
-    100% {
-      border-color: var(--color-text-secondary);
-      box-shadow: none;
+      animation: none;
     }
   }
 

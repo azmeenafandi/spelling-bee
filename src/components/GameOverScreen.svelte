@@ -11,6 +11,8 @@
   export let newAchievements: Array<{ key: string; name: string; emoji: string }> = [];
   export let wordId: number;
 
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   const dispatch = createEventDispatcher<{
     restart: void;
     report: number;
@@ -52,8 +54,8 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="overlay" transition:fade={{ duration: 300 }}>
-  <div class="sheet" transition:fly={{ y: 80, duration: 400, delay: 50 }}>
+<div class="overlay" transition:fade={{ duration: prefersReducedMotion ? 0 : 300 }}>
+  <div class="sheet" transition:fly={{ y: 80, duration: prefersReducedMotion ? 0 : 400, delay: prefersReducedMotion ? 0 : 50 }}>
     <h1 class="heading">Game Over</h1>
 
     <div class="answer-section">
@@ -360,23 +362,36 @@
     opacity: 0.9;
   }
 
-  @keyframes confettiFall {
-    0% {
-      transform: translateY(0) rotate(0deg) scale(1);
-      opacity: 1;
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(720deg) scale(0.5);
+        opacity: 0;
+      }
     }
-    100% {
-      transform: translateY(100vh) rotate(720deg) scale(0.5);
-      opacity: 0;
+
+    @keyframes bannerPulse {
+      0% {
+        transform: scale(1);
+      }
+      100% {
+        transform: scale(1.03);
+      }
     }
   }
 
-  @keyframes bannerPulse {
-    0% {
-      transform: scale(1);
+  @media (prefers-reduced-motion: reduce) {
+    .confetti-piece {
+      animation: none;
+      opacity: 0;
     }
-    100% {
-      transform: scale(1.03);
+
+    .high-score-banner {
+      animation: none;
     }
   }
 

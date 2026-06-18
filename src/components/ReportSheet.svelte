@@ -6,6 +6,9 @@
   export let wordId: number;
   export let open: boolean = false;
 
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $: motionDuration = (ms: number) => prefersReducedMotion ? 0 : ms;
+
   const dispatch = createEventDispatcher<{ close: void }>();
 
   const REASONS = [
@@ -82,10 +85,10 @@
     class="backdrop"
     on:click={handleBackdropClick}
     on:keydown={handleKeydown}
-    transition:fade={{ duration: 200 }}
+    transition:fade={{ duration: motionDuration(200) }}
     role="presentation"
   >
-    <div class="sheet" transition:slide={{ duration: 300, axis: 'y' }} role="dialog" aria-label="Report an issue">
+    <div class="sheet" transition:slide={{ duration: motionDuration(300), axis: 'y' }} role="dialog" aria-label="Report an issue">
       {#if submitted}
         <div class="confirmation">
           <span class="confirm-icon">✅</span>

@@ -6,6 +6,9 @@
 
   export let open: boolean = false;
 
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $: motionDuration = (ms: number) => prefersReducedMotion ? 0 : ms;
+
   const dispatch = createEventDispatcher<{ close: void }>();
 
   let fileInput: HTMLInputElement;
@@ -111,10 +114,10 @@
     class="backdrop"
     on:click={handleBackdropClick}
     on:keydown={handleKeydown}
-    transition:fade={{ duration: 200 }}
+    transition:fade={{ duration: motionDuration(200) }}
     role="presentation"
   >
-    <div class="sheet" transition:slide={{ duration: 300, axis: 'y' }} role="dialog" aria-label="Settings">
+    <div class="sheet" transition:slide={{ duration: motionDuration(300), axis: 'y' }} role="dialog" aria-label="Settings">
       <div class="sheet-header">
         <h2 class="heading">Settings</h2>
         <button class="close-btn" on:click={close} aria-label="Close settings">
