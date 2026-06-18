@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { fade, fly } from 'svelte/transition';
   import type { RankEntry } from '$lib/game';
-  import { generateGameShareCard, copyToClipboard } from '$lib/share';
+  import { generateGameShareCard, shareResults } from '$lib/share';
 
   let {
     sessionScore,
@@ -74,7 +74,7 @@
   }
 
   async function handleShare() {
-    const card = generateGameShareCard({
+    const { text, url } = generateGameShareCard({
       date: new Date().toISOString().slice(0, 10),
       score: sessionScore,
       rank: `${rank.emoji} ${rank.title}`,
@@ -84,7 +84,7 @@
       wordsCorrect: wordsCorrect,
       attemptPattern,
     });
-    const ok = await copyToClipboard(card);
+    const ok = await shareResults(text, url);
     if (ok) {
       shareCopied = true;
       clearTimeout(shareTimeout);

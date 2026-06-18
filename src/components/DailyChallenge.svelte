@@ -2,7 +2,7 @@
   import { fade, fly, slide } from 'svelte/transition';
   import { fetchDaily, checkSpelling, type DailyResponse } from '$lib/api';
   import { saveDailyResult, getDailyResult } from '$lib/storage';
-  import { generateDailyShareCard, copyToClipboard } from '$lib/share';
+  import { generateDailyShareCard, shareResults } from '$lib/share';
   import { variant } from '$lib/stores';
   import PronounceButton from './PronounceButton.svelte';
 
@@ -32,6 +32,7 @@
       correct: alreadyCompleted === true,
     });
   });
+  let shareUrl = $derived(sharePreview().url);
   let shareCopied = $state(false);
 
   // ── Actions ──
@@ -96,7 +97,7 @@
       </div>
       <p class="daily-hint">Come back tomorrow for a new word</p>
       <div class="share-preview">
-        <pre>{sharePreview()}</pre>
+        <pre>{sharePreview().text}</pre>
       </div>
     {:else if phase === 'idle'}
       <!-- ── Not attempted: show card ── -->
@@ -183,7 +184,8 @@
 
       <button class="share-btn" onclick={async (e) => {
         e.stopPropagation();
-        const ok = await copyToClipboard(sharePreview());
+        const { text, url } = sharePreview();
+        const ok = await shareResults(text, url);
         if (ok) {
           shareCopied = true;
           setTimeout(() => { shareCopied = false; }, 2000);

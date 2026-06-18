@@ -30,28 +30,36 @@ export function generateGameShareCard(data: {
   wordsAttempted: number;
   wordsCorrect: number;
   attemptPattern: ('correct' | 'second' | 'wrong')[];
-}): string {
+}): { text: string; url: string } {
   const date = shortDate(data.date);
   const grid = data.attemptPattern.map(outcomeEmoji).join('');
-  return [
-    `🐝 Spelling Bee — ${date}`,
-    `⭐ ${data.score.toLocaleString()} pts · ${data.rank} · 🔥 ${data.streak} streak · Tier ${data.tier}`,
-    grid,
-    PUBLIC_URL,
-  ].join('\n');
+  const url = `https://${PUBLIC_URL}`;
+  return {
+    text: [
+      `🐝 Spelling Bee — ${date}`,
+      `⭐ ${data.score.toLocaleString()} pts · ${data.rank} · 🔥 ${data.streak} streak · Tier ${data.tier}`,
+      grid,
+      PUBLIC_URL,
+    ].join('\n'),
+    url,
+  };
 }
 
 export function generateDailyShareCard(data: {
   date: string;
   correct: boolean;
-}): string {
+}): { text: string; url: string } {
   const date = shortDate(data.date);
   const result = data.correct ? '✅ Got it!' : '❌ Better luck tomorrow!';
-  return [
-    `🐝 Daily Challenge — ${date}`,
-    result,
-    PUBLIC_URL,
-  ].join('\n');
+  const url = `https://${PUBLIC_URL}`;
+  return {
+    text: [
+      `🐝 Daily Challenge — ${date}`,
+      result,
+      PUBLIC_URL,
+    ].join('\n'),
+    url,
+  };
 }
 
 export async function copyToClipboard(text: string): Promise<boolean> {
@@ -77,4 +85,21 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function shareResults(text: string, url?: string): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    try {
+      await navigator.share({
+        title: 'Spelling Bee',
+        text,
+        url: url || 'https://spelling.beeroolabs.com',
+      });
+      return true;
+    } catch {
+      // User cancelled or API unsupported — fall through to clipboard
+    }
+  }
+
+  return copyToClipboard(text);
 }
