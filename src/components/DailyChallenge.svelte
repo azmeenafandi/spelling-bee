@@ -1,38 +1,36 @@
 <script lang="ts">
   import { fade, fly, slide } from 'svelte/transition';
-  import { createEventDispatcher } from 'svelte';
   import { fetchDaily, checkSpelling, type DailyResponse } from '$lib/api';
   import { saveDailyResult, getDailyResult } from '$lib/storage';
   import { generateDailyShareCard, copyToClipboard } from '$lib/share';
   import { variant } from '$lib/stores';
   import PronounceButton from './PronounceButton.svelte';
 
-  const dispatch = createEventDispatcher<{ close: void }>();
+  let { onClose }: { onClose?: () => void } = $props();
 
   // ── State ──
-  let dailyWord: DailyResponse | null = null;
-  let loading = false;
-  let error: string | null = null;
-  let phase: 'idle' | 'playing' | 'result' = 'idle';
-  let attempt = '';
-  let resultCorrect = false;
-  let submitted = false;
+  let dailyWord: DailyResponse | null = $state(null);
+  let loading = $state(false);
+  let error: string | null = $state(null);
+  let phase: 'idle' | 'playing' | 'result' = $state('idle');
+  let attempt = $state('');
+  let resultCorrect = $state(false);
+  let submitted = $state(false);
 
   // ── Derived ──
-  $: today = new Date().toISOString().slice(0, 10);
-  $: monthName = new Date().toLocaleDateString('en-GB', { month: 'long', day: 'numeric' });
-  $: lang = (
+  let today = $derived(new Date().toISOString().slice(0, 10));
+  let monthName = $derived(new Date().toLocaleDateString('en-GB', { month: 'long', day: 'numeric' }));
+  let lang = $derived(
     ($variant === 'british' ? 'en-GB' : 'en-US') as 'en-GB' | 'en-US'
   );
-  let alreadyCompleted: boolean | null = getDailyResult(today);
-  $: alreadyCompleted = getDailyResult(today);
-  $: sharePreview = () => {
+  let alreadyCompleted = $derived(getDailyResult(today));
+  let sharePreview = $derived(() => {
     return generateDailyShareCard({
       date: today,
       correct: alreadyCompleted === true,
     });
-  };
-  let shareCopied = false;
+  });
+  let shareCopied = $state(false);
 
   // ── Actions ──
   async function startDaily() {
@@ -62,12 +60,11 @@
     submitted = true;
     phase = 'result';
 
-    // Force re-evaluate alreadyCompleted
-    alreadyCompleted = getDailyResult(today);
+    // alreadyCompleted re-evaluates via $derived
   }
 
   function handleClose() {
-    dispatch('close');
+    onClose?.();
   }
 
   function handleKeydown(e: KeyboardEvent) {

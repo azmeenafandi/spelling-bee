@@ -1,25 +1,34 @@
 <script lang="ts">
-  export let tier: number = 1;
-  export let streak: number = 0;
-  export let nextTierAt: number = 3;
-  export let animating: boolean = false;
+  let {
+    tier = 1,
+    streak = 0,
+    nextTierAt = 3,
+    animating = false,
+  }: {
+    tier?: number;
+    streak?: number;
+    nextTierAt?: number;
+    animating?: boolean;
+  } = $props();
 
   const MAX_TIER = 6;
 
-  $: isMaxTier = tier >= MAX_TIER;
+  let isMaxTier = $derived(tier >= MAX_TIER);
 
   // Progress toward next tier: percentage of streak relative to nextTierAt
-  $: progress = isMaxTier ? 100 : Math.min((streak / nextTierAt) * 100, 100);
+  let progress = $derived(isMaxTier ? 100 : Math.min((streak / nextTierAt) * 100, 100));
 
   // Tier-up animation state
-  let shimmer = false;
+  let shimmer = $state(false);
 
-  $: if (animating) {
-    shimmer = true;
-    const timeout = setTimeout(() => {
-      shimmer = false;
-    }, 800);
-  }
+  $effect(() => {
+    if (animating) {
+      shimmer = true;
+      const timeout = setTimeout(() => {
+        shimmer = false;
+      }, 800);
+    }
+  });
 </script>
 
 <div class="tier-strip" class:shimmer>

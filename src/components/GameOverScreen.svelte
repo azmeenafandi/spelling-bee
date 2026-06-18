@@ -1,31 +1,45 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { fade, fly } from 'svelte/transition';
   import type { RankEntry } from '$lib/game';
   import { generateGameShareCard, copyToClipboard } from '$lib/share';
 
-  export let sessionScore: number;
-  export let highScore: number;
-  export let isNewHighScore: boolean;
-  export let answer: string;
-  export let rank: RankEntry;
-  export let newAchievements: Array<{ key: string; name: string; emoji: string }> = [];
-  export let wordId: number;
-  export let wordsTotal: number = 0;
-  export let wordsCorrect: number = 0;
-  export let attemptPattern: Array<'correct' | 'second' | 'wrong'> = [];
-  export let streak: number = 0;
-  export let tier: number = 1;
+  let {
+    sessionScore,
+    highScore,
+    isNewHighScore,
+    answer,
+    rank,
+    newAchievements = [],
+    wordId,
+    wordsTotal = 0,
+    wordsCorrect = 0,
+    attemptPattern = [],
+    streak = 0,
+    tier = 1,
+    onRestart,
+    onReport,
+  }: {
+    sessionScore: number;
+    highScore: number;
+    isNewHighScore: boolean;
+    answer: string;
+    rank: RankEntry;
+    newAchievements: Array<{ key: string; name: string; emoji: string }>;
+    wordId: number;
+    wordsTotal: number;
+    wordsCorrect: number;
+    attemptPattern: Array<'correct' | 'second' | 'wrong'>;
+    streak: number;
+    tier: number;
+    onRestart: () => void;
+    onReport: (wordId: number) => void;
+  } = $props();
 
   const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let shareCopied = false;
+  let shareCopied = $state(false);
   let shareTimeout: ReturnType<typeof setTimeout> | undefined;
-
-  const dispatch = createEventDispatcher<{
-    restart: void;
-    report: number;
-  }>();
 
   let confettiPieces: Array<{
     id: number;
@@ -34,7 +48,7 @@
     duration: number;
     color: string;
     rotation: number;
-  }> = [];
+  }> = $state([]);
 
   const CONFETTI_COLORS = ['var(--color-primary)', 'var(--color-secondary)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-error)', 'var(--color-secondary)'];
 
@@ -52,11 +66,11 @@
   });
 
   function handleReport() {
-    dispatch('report', wordId);
+    onReport(wordId);
   }
 
   function handleRestart() {
-    dispatch('restart');
+    onRestart();
   }
 
   async function handleShare() {
@@ -80,7 +94,7 @@
     }
   }
 
-  $: pointsBehind = Math.max(0, highScore - sessionScore);
+  let pointsBehind = $derived(Math.max(0, highScore - sessionScore));
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -93,7 +107,7 @@
       <p class="answer-word">{answer}</p>
       <button
         class="report-word"
-        on:click={handleReport}
+        onclick={handleReport}
         aria-label="Report an issue with this word"
         title="Report an issue"
       >
@@ -136,11 +150,11 @@
       </div>
     {/if}
 
-    <button class="play-again-btn" on:click={handleRestart}>
+    <button class="play-again-btn" onclick={handleRestart}>
       Play Again
     </button>
 
-    <button class="share-btn" on:click={handleShare}>
+    <button class="share-btn" onclick={handleShare}>
       📤 {shareCopied ? 'Copied!' : 'Share Results'}
     </button>
   </div>

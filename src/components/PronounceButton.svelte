@@ -1,14 +1,13 @@
 <script lang="ts">
   import { speakWord } from '$lib/speech';
 
-  export let spelling: string;
-  export let lang: 'en-GB' | 'en-US' = 'en-GB';
-  export let disabled: boolean = false;
+  let { spelling, lang = 'en-GB', disabled = false }: { spelling: string; lang?: 'en-GB' | 'en-US'; disabled?: boolean } = $props();
 
-  $: speechSupported =
-    typeof window !== 'undefined' && 'speechSynthesis' in window;
+  let speechSupported = $derived(
+    typeof window !== 'undefined' && 'speechSynthesis' in window
+  );
 
-  let speaking = false;
+  let speaking = $state(false);
 
   async function handlePronounce() {
     if (disabled || speaking || !speechSupported) return;
@@ -30,7 +29,7 @@
     class="pronounce-btn"
     class:speaking
     disabled={disabled || !speechSupported}
-    on:click={handlePronounce}
+    onclick={handlePronounce}
     aria-label={speechSupported ? 'Pronounce word' : 'Speech not supported'}
     title={!speechSupported ? 'Speech not supported' : undefined}
   >

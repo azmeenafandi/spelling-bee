@@ -1,21 +1,25 @@
 <script lang="ts">
   import type { RankEntry } from '$lib/game';
 
-  export let sessionScore: number = 0;
-  export let highScore: number = 0;
-  export let rank: RankEntry = { minScore: 0, title: 'Apprentice', emoji: '🥚' };
+  let {
+    sessionScore = 0,
+    highScore = 0,
+    rank = { minScore: 0, title: 'Apprentice', emoji: '🥚' },
+  }: { sessionScore?: number; highScore?: number; rank?: RankEntry } = $props();
 
-  let prevScore = 0;
-  let animate = false;
+  let prevScore = $state(0);
+  let animate = $state(false);
 
   // Trigger scale animation when score changes
-  $: if (sessionScore !== prevScore) {
-    animate = true;
-    prevScore = sessionScore;
-    const timeout = setTimeout(() => {
-      animate = false;
-    }, 300);
-  }
+  $effect(() => {
+    if (sessionScore !== prevScore) {
+      animate = true;
+      prevScore = sessionScore;
+      const timeout = setTimeout(() => {
+        animate = false;
+      }, 300);
+    }
+  });
 </script>
 
 <div class="scoreboard">

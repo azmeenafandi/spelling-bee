@@ -1,28 +1,24 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { fade, slide } from 'svelte/transition';
   import { variant } from '$lib/stores';
   import { exportData, importData } from '$lib/storage';
 
-  export let open: boolean = false;
+  let { open, onClose }: { open: boolean; onClose?: () => void } = $props();
 
   const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  $: motionDuration = (ms: number) => prefersReducedMotion ? 0 : ms;
+  const motionDuration = (ms: number) => prefersReducedMotion ? 0 : ms;
 
-  const dispatch = createEventDispatcher<{ close: void }>();
-
-  let fileInput: HTMLInputElement;
-  let importing = false;
-  let importError: string | null = null;
-  let importSuccess = false;
-  let showResetConfirm = false;
+  let fileInput: HTMLInputElement | undefined = $state();
+  let importing = $state(false);
+  let importError = $state<string | null>(null);
+  let importSuccess = $state(false);
+  let showResetConfirm = $state(false);
 
   function close() {
-    open = false;
     showResetConfirm = false;
     importError = null;
     importSuccess = false;
-    dispatch('close');
+    onClose?.();
   }
 
   function handleBackdropClick(e: MouseEvent) {
@@ -107,20 +103,20 @@
   }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 {#if open}
   <div
     class="backdrop"
-    on:click={handleBackdropClick}
-    on:keydown={handleKeydown}
+    onclick={handleBackdropClick}
+    onkeydown={handleKeydown}
     transition:fade={{ duration: motionDuration(200) }}
     role="presentation"
   >
     <div class="sheet" transition:slide={{ duration: motionDuration(300), axis: 'y' }} role="dialog" aria-label="Settings">
       <div class="sheet-header">
         <h2 class="heading">Settings</h2>
-        <button class="close-btn" on:click={close} aria-label="Close settings">
+        <button class="close-btn" onclick={close} aria-label="Close settings">
           ✕
         </button>
       </div>
@@ -133,7 +129,7 @@
         </div>
         <button
           class="toggle-btn"
-          on:click={toggleVariant}
+          onclick={toggleVariant}
           aria-pressed={$variant === 'american'}
           aria-label="Toggle spelling variant"
         >
@@ -151,7 +147,7 @@
           <span class="setting-label">Export Data</span>
           <span class="setting-desc">Download your high score &amp; achievements</span>
         </div>
-        <button class="action-btn" on:click={handleExport}>
+        <button class="action-btn" onclick={handleExport}>
           Export
         </button>
       </div>
@@ -162,7 +158,7 @@
           <span class="setting-label">Import Data</span>
           <span class="setting-desc">Restore from a saved backup</span>
         </div>
-        <button class="action-btn" on:click={triggerImport} disabled={importing}>
+        <button class="action-btn" onclick={triggerImport} disabled={importing}>
           {importing ? 'Importing...' : 'Import'}
         </button>
       </div>
@@ -171,7 +167,7 @@
         type="file"
         accept=".json"
         class="sr-only"
-        on:change={handleFileChange}
+        onchange={handleFileChange}
       />
 
       {#if importSuccess}
@@ -192,7 +188,7 @@
         </div>
         <button
           class="action-btn danger"
-          on:click={handleReset}
+          onclick={handleReset}
         >
           {showResetConfirm ? 'Confirm Reset' : 'Reset'}
         </button>
@@ -203,7 +199,7 @@
           <p class="confirm-text">
             This will delete your high score and achievements. Are you sure?
           </p>
-          <button class="cancel-confirm" on:click={() => { showResetConfirm = false; }}>
+          <button class="cancel-confirm" onclick={() => { showResetConfirm = false; }}>
             Cancel
           </button>
         </div>

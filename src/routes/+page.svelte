@@ -49,53 +49,53 @@
   } from '$lib/audio';
 
   // ── Local state ──
-  let isLoading = false;
-  let inputError = false;
-  let errorMessage: string | null = null;
-  let settingsOpen = false;
-  let reportOpen = false;
-  let dailyOpen = false;
-  let reportWordId = 0;
-  let isNewHighScore = false;
-  let tierAnimating = false;
-  let gameOverAnswer = '';
-  let poolExhausted = false;
-  let consecutiveFirstAttempt = 0;
-  let correctFlash: 'green' | 'amber' | null = null;
-  let showPhew = false;
-  let tierToastVisible = false;
-  let newSessionAchievements: Array<{
+  let isLoading = $state(false);
+  let inputError = $state(false);
+  let errorMessage = $state<string | null>(null);
+  let settingsOpen = $state(false);
+  let reportOpen = $state(false);
+  let dailyOpen = $state(false);
+  let reportWordId = $state(0);
+  let isNewHighScore = $state(false);
+  let tierAnimating = $state(false);
+  let gameOverAnswer = $state('');
+  let poolExhausted = $state(false);
+  let consecutiveFirstAttempt = $state(0);
+  let correctFlash = $state<'green' | 'amber' | null>(null);
+  let showPhew = $state(false);
+  let tierToastVisible = $state(false);
+  let newSessionAchievements = $state<Array<{
     key: string;
     name: string;
     emoji: string;
-  }> = [];
+  }>>([]);
 
   // Achievement toast queue
-  let achievementQueue: Array<{
+  let achievementQueue = $state<Array<{
     key: string;
     name: string;
     emoji: string;
-  }> = [];
-  let currentToastAchievement: {
+  }>>([]);
+  let currentToastAchievement = $state<{
     key: string;
     name: string;
     emoji: string;
-  } | null = null;
-  let toastTimer: ReturnType<typeof setTimeout> | undefined;
+  } | null>(null);
+  let toastTimer = $state<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // ── Derived ──
-  $: rank = getRank($sessionScore);
-  $: currentTierValue = getTierFromStreak($streak);
-  $: lang = ($variant === 'british' ? 'en-GB' : 'en-US') as 'en-GB' | 'en-US';
-  $: nextTierAt = getNextTierAt(currentTierValue);
+  let rank = $derived(getRank($sessionScore));
+  let currentTierValue = $derived(getTierFromStreak($streak));
+  let lang = $derived(($variant === 'british' ? 'en-GB' : 'en-US') as 'en-GB' | 'en-US');
+  let nextTierAt = $derived(getNextTierAt(currentTierValue));
 
   // Tier-up animation detection
   // Attempt tracking for share card
-  let wordsAttempted = 0;
-  let wordsCorrect = 0;
-  let attemptPattern: Array<'correct' | 'second' | 'wrong'> = [];
+  let wordsAttempted = $state(0);
+  let wordsCorrect = $state(0);
+  let attemptPattern = $state<Array<'correct' | 'second' | 'wrong'>>([]);
 
-  let previousTier = 1;
+  let previousTier = $state(1);
 
   const TIER_NAMES: Record<number, string> = {
     1: 'The Beginning',
@@ -110,19 +110,21 @@
     return TIER_NAMES[tier] ?? '';
   }
 
-  $: if (currentTierValue > previousTier) {
-    tierAnimating = true;
-    tierToastVisible = true;
-    previousTier = currentTierValue;
-    playTierUp();
-    triggerHaptic();
-    setTimeout(() => {
-      tierAnimating = false;
-    }, 800);
-    setTimeout(() => {
-      tierToastVisible = false;
-    }, 2500);
-  }
+  $effect(() => {
+    if (currentTierValue > previousTier) {
+      tierAnimating = true;
+      tierToastVisible = true;
+      previousTier = currentTierValue;
+      playTierUp();
+      triggerHaptic();
+      setTimeout(() => {
+        tierAnimating = false;
+      }, 800);
+      setTimeout(() => {
+        tierToastVisible = false;
+      }, 2500);
+    }
+  });
 
   // ── Constants ──
   const ACHIEVEMENT_EMOJIS: Record<string, string> = {
@@ -231,18 +233,18 @@
   }
 
   // ── Core: Check Spelling ──
-  async function handleCheck(event: CustomEvent<string>) {
+  async function handleCheck(spelling: string) {
     if ($gameState !== 'playing' && $gameState !== 'wrong') return;
 
-    const spelling = event.detail.trim();
-    if (!spelling || !$currentWord) return;
+    const trimmedSpelling = spelling.trim();
+    if (!trimmedSpelling || !$currentWord) return;
 
     $gameState = 'checking';
 
     try {
       const result = await checkSpelling({
         id: $currentWord.id,
-        spelling,
+        spelling: trimmedSpelling,
         attempt: $currentAttempt,
       });
 
@@ -411,7 +413,7 @@
   }
 
   // ── Event Handlers ──
-  let audioInitialised = false;
+  let audioInitialised = $state(false);
 
   function ensureAudio() {
     if (!audioInitialised) {
@@ -454,7 +456,7 @@
 {#if $gameState === 'variant-select'}
   <VariantSelect onStart={handleStart} />
 
-  <button class="daily-btn" on:click={() => (dailyOpen = true)}>
+  <button class="daily-btn" onclick={() => (dailyOpen = true)}>
     🐝 Daily Challenge
   </button>
 {:else}
@@ -462,7 +464,7 @@
     <!-- Settings button -->
     <button
       class="settings-btn"
-      on:click={() => (settingsOpen = true)}
+      onclick={() => (settingsOpen = true)}
       aria-label="Settings"
     >
       ⚙️
@@ -488,7 +490,7 @@
           <DefinitionDisplay
             definition={$currentWord.definition}
             wordId={$currentWord.id}
-            on:report={(e) => handleReport(e.detail)}
+            onReport={handleReport}
           />
           <PronounceButton
             spelling={$currentWord._spelling}
@@ -512,7 +514,7 @@
           disabled={$gameState !== 'playing' && $gameState !== 'wrong'}
           error={inputError}
           {correctFlash}
-          on:spelling={handleCheck}
+          onSpelling={handleCheck}
         />
 
         {#if $gameState === 'wrong' && !inputError}
@@ -547,7 +549,7 @@
             <span>{rank.emoji}</span>
             <span class="pool-rank-title">{rank.title}</span>
           </div>
-          <button class="play-again-btn" on:click={handleRestart}>
+          <button class="play-again-btn" onclick={handleRestart}>
             Play Again
           </button>
         </div>
@@ -566,8 +568,8 @@
         {attemptPattern}
         streak={$streak}
         tier={currentTierValue}
-        on:restart={handleRestart}
-        on:report={(e) => handleReport(e.detail)}
+        onRestart={handleRestart}
+        onReport={handleReport}
       />
     {/if}
   {/if}
@@ -576,7 +578,7 @@
   {#if errorMessage}
     <div class="error-banner" transition:slide={{ duration: prefersReducedMotion ? 0 : 200 }}>
       <p class="error-text">{errorMessage}</p>
-      <button class="retry-btn" on:click={handleRetry}>Retry</button>
+      <button class="retry-btn" onclick={handleRetry}>Retry</button>
     </div>
   {/if}
 
@@ -584,11 +586,11 @@
   <ReportSheet
     wordId={reportWordId}
     open={reportOpen}
-    on:close={() => (reportOpen = false)}
+    onClose={() => (reportOpen = false)}
   />
   <SettingsSheet
     open={settingsOpen}
-    on:close={() => (settingsOpen = false)}
+    onClose={() => (settingsOpen = false)}
   />
   <AchievementToast achievement={currentToastAchievement} />
 
@@ -605,7 +607,7 @@
 {/if}
 
 {#if dailyOpen}
-  <DailyChallenge on:close={() => (dailyOpen = false)} />
+  <DailyChallenge onClose={() => (dailyOpen = false)} />
 {/if}
 
 <!-- ===================================================================

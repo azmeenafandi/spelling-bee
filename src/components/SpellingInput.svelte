@@ -1,27 +1,37 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
 
-  export let attempt: number = 1;
-  export let disabled: boolean = false;
-  export let error: boolean = false;
-  export let correctFlash: 'green' | 'amber' | null = null;
+  let {
+    attempt = 1,
+    disabled = false,
+    error = false,
+    correctFlash = null,
+    onSpelling,
+  }: {
+    attempt?: number;
+    disabled?: boolean;
+    error?: boolean;
+    correctFlash?: 'green' | 'amber' | null;
+    onSpelling?: (spelling: string) => void;
+  } = $props();
 
-  const dispatch = createEventDispatcher<{ spelling: string }>();
+  let inputEl: HTMLInputElement | undefined = $state();
+  let shake = $state(false);
 
-  let inputEl: HTMLInputElement;
-  let shake = false;
-
-  $: placeholder =
-    attempt === 1 ? 'Type your spelling...' : 'One more try...';
+  let placeholder = $derived(
+    attempt === 1 ? 'Type your spelling...' : 'One more try...'
+  );
 
   // Trigger shake animation when error prop becomes true
-  $: if (error) {
-    shake = true;
-    // Reset shake after animation completes
-    const timeout = setTimeout(() => {
-      shake = false;
-    }, 500);
-  }
+  $effect(() => {
+    if (error) {
+      shake = true;
+      const timeout = setTimeout(() => {
+        shake = false;
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  });
 
   onMount(() => {
     inputEl?.focus();
@@ -33,7 +43,7 @@
     const value = inputEl.value.trim();
     if (value.length === 0) return;
 
-    dispatch('spelling', value);
+    onSpelling?.(value);
     inputEl.value = '';
   }
 
@@ -54,7 +64,7 @@
     autocomplete="off"
     autocapitalize="off"
     spellcheck="false"
-    on:keydown={handleKeydown}
+    onkeydown={handleKeydown}
     class="spelling-input"
     aria-label="Type your spelling"
   />

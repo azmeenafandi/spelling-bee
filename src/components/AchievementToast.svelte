@@ -1,27 +1,29 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
 
-  export let achievement: { key: string; name: string; emoji: string } | null = null;
+  let { achievement = null }: { achievement?: { key: string; name: string; emoji: string } | null } = $props();
 
   const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let timer: ReturnType<typeof setTimeout> | undefined;
-  let visible = false;
-  let currentAchievement: { key: string; name: string; emoji: string } | null = null;
+  let visible = $state(false);
+  let currentAchievement: { key: string; name: string; emoji: string } | null = $state(null);
 
-  $: if (achievement) {
-    // New achievement arrived — dismiss current if any, show new one
-    clearTimeout(timer);
-    visible = false;
-    currentAchievement = achievement;
+  $effect(() => {
+    if (achievement) {
+      // New achievement arrived — dismiss current if any, show new one
+      clearTimeout(timer);
+      visible = false;
+      currentAchievement = achievement;
 
-    // Small delay for exit transition before re-entering
-    setTimeout(() => {
-      visible = true;
-      startDismissTimer();
-    }, 50);
-  }
+      // Small delay for exit transition before re-entering
+      setTimeout(() => {
+        visible = true;
+        startDismissTimer();
+      }, 50);
+    }
+  });
 
   function startDismissTimer() {
     clearTimeout(timer);

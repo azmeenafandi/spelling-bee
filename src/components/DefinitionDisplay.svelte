@@ -1,13 +1,8 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-
-  export let definition: string;
-  export let wordId: number;
-
-  const dispatch = createEventDispatcher<{ report: number }>();
+  let { definition, wordId, onReport }: { definition: string; wordId: number; onReport: (wordId: number) => void } = $props();
 
   function handleReport() {
-    dispatch('report', wordId);
+    onReport(wordId);
   }
 </script>
 
@@ -16,7 +11,7 @@
     <p class="definition-text">{definition}</p>
     <button
       class="report-flag"
-      on:click={handleReport}
+      onclick={handleReport}
       aria-label="Report this definition"
       title="Report an issue"
     >

@@ -1,15 +1,17 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { fade, slide } from 'svelte/transition';
   import { reportIssue } from '$lib/api';
 
-  export let wordId: number;
-  export let open: boolean = false;
+  interface Props {
+    wordId: number;
+    open?: boolean;
+    onClose?: () => void;
+  }
+
+  let { wordId, open = $bindable(false), onClose }: Props = $props();
 
   const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  $: motionDuration = (ms: number) => prefersReducedMotion ? 0 : ms;
-
-  const dispatch = createEventDispatcher<{ close: void }>();
+  const motionDuration = (ms: number) => prefersReducedMotion ? 0 : ms;
 
   const REASONS = [
     { value: 'wrong_spelling', label: 'Incorrect spelling' },
@@ -18,15 +20,15 @@
     { value: 'other', label: 'Other' },
   ] as const;
 
-  let selectedReason: string = '';
-  let note: string = '';
-  let submitting = false;
-  let error: string | null = null;
-  let submitted = false;
+  let selectedReason: string = $state('');
+  let note: string = $state('');
+  let submitting = $state(false);
+  let error: string | null = $state(null);
+  let submitted = $state(false);
 
   function close() {
     open = false;
-    dispatch('close');
+    onClose?.();
   }
 
   function handleBackdropClick(e: MouseEvent) {
@@ -78,13 +80,13 @@
   }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 {#if open}
   <div
     class="backdrop"
-    on:click={handleBackdropClick}
-    on:keydown={handleKeydown}
+    onclick={handleBackdropClick}
+    onkeydown={handleKeydown}
     transition:fade={{ duration: motionDuration(200) }}
     role="presentation"
   >
@@ -129,12 +131,12 @@
         {/if}
 
         <div class="actions">
-          <button class="btn btn-cancel" on:click={handleCancel} disabled={submitting}>
+          <button class="btn btn-cancel" onclick={handleCancel} disabled={submitting}>
             Cancel
           </button>
           <button
             class="btn btn-submit"
-            on:click={handleSubmit}
+            onclick={handleSubmit}
             disabled={!selectedReason || submitting}
           >
             {submitting ? 'Submitting...' : 'Submit'}
