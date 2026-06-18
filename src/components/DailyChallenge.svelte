@@ -8,6 +8,8 @@
 
   let { onClose }: { onClose?: () => void } = $props();
 
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   // ── State ──
   let dailyWord: DailyResponse | null = $state(null);
   let loading = $state(false);
@@ -68,136 +70,182 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter' && phase === 'playing' && attempt.trim()) {
+    if (e.key === 'Escape') {
+      handleClose();
+    } else if (e.key === 'Enter' && phase === 'playing' && attempt.trim()) {
       submitAttempt();
     }
   }
 </script>
 
-{#if alreadyCompleted !== null}
-  <!-- ── Already completed ── -->
-  <div class="daily-card completed">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="overlay" transition:fade={{ duration: prefersReducedMotion ? 0 : 300 }}>
+  <button class="backdrop" onclick={handleClose} aria-label="Close daily challenge"></button>
+  <div class="sheet" transition:fly={{ y: 80, duration: prefersReducedMotion ? 0 : 400, delay: prefersReducedMotion ? 0 : 50 }}>
     <button class="close-btn" onclick={handleClose} aria-label="Close daily challenge">✕</button>
-    <div class="daily-header">
-      <span class="daily-icon">📅</span>
-      <span class="daily-title">Daily Challenge — {monthName}</span>
-    </div>
-    <div class="daily-status">
-      <span class="status-check">{alreadyCompleted ? '✅' : '❌'}</span>
-      <span class="status-text">{alreadyCompleted ? 'Completed!' : 'Better luck tomorrow!'}</span>
-    </div>
-    <p class="daily-hint">Come back tomorrow for a new word</p>
-    <div class="share-preview">
-      <pre>{sharePreview()}</pre>
-    </div>
-  </div>
-{:else if phase === 'idle'}
-  <!-- ── Not attempted: show card ── -->
-  <div class="daily-card idle" role="button" tabindex="0" onclick={startDaily} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startDaily(); } }}>
-    <button class="close-btn" onclick={(e) => { e.stopPropagation(); handleClose(); }} aria-label="Close daily challenge">✕</button>
-    <div class="daily-header">
-      <span class="daily-icon">📅</span>
-      <span class="daily-title">Daily Challenge — {monthName}</span>
-    </div>
-    {#if loading}
-      <p class="daily-hint">Loading…</p>
-    {:else}
-      <p class="daily-hint">One word. One chance. Ready?</p>
-    {/if}
-  </div>
-{:else if phase === 'playing' && dailyWord}
-  <!-- ── Playing: definition + input ── -->
-  <div class="daily-card playing" in:fly={{ y: 20, duration: 300 }}>
-    <button class="close-btn" onclick={handleClose} aria-label="Close daily challenge">✕</button>
-    <div class="daily-header">
-      <span class="daily-icon">📅</span>
-      <span class="daily-title">Daily Challenge — {monthName}</span>
-    </div>
 
-    <div class="daily-definition">
-      <p>{dailyWord.definition}</p>
-    </div>
-
-    <div class="daily-pronounce">
-      <PronounceButton
-        spelling={dailyWord._spelling}
-        {lang}
-        disabled={false}
-      />
-    </div>
-
-    <div class="daily-input-group">
-      <!-- svelte-ignore a11y_autofocus -->
-      <input
-        type="text"
-        class="daily-input"
-        placeholder="Type your spelling…"
-        bind:value={attempt}
-        onkeydown={handleKeydown}
-        autocomplete="off"
-        autocapitalize="off"
-        autofocus
-      />
-      <button
-        class="daily-submit"
-        onclick={submitAttempt}
-        disabled={!attempt.trim()}
+    {#if alreadyCompleted !== null}
+      <!-- ── Already completed ── -->
+      <div class="daily-header">
+        <span class="daily-icon">📅</span>
+        <span class="daily-title">Daily Challenge — {monthName}</span>
+      </div>
+      <div class="daily-status">
+        <span class="status-check">{alreadyCompleted ? '✅' : '❌'}</span>
+        <span class="status-text">{alreadyCompleted ? 'Completed!' : 'Better luck tomorrow!'}</span>
+      </div>
+      <p class="daily-hint">Come back tomorrow for a new word</p>
+      <div class="share-preview">
+        <pre>{sharePreview()}</pre>
+      </div>
+    {:else if phase === 'idle'}
+      <!-- ── Not attempted: show card ── -->
+      <div
+        class="daily-prompt"
+        role="button"
+        tabindex="0"
+        onclick={startDaily}
+        onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startDaily(); } }}
       >
-        Enter
-      </button>
-    </div>
-  </div>
-{:else if phase === 'result'}
-  <!-- ── Result ── -->
-  <div class="daily-card result" in:fly={{ y: 20, duration: 300 }}>
-    <button class="close-btn" onclick={handleClose} aria-label="Close daily challenge">✕</button>
-    <div class="daily-header">
-      <span class="daily-icon">📅</span>
-      <span class="daily-title">Daily Challenge — {monthName}</span>
-    </div>
-
-    {#if resultCorrect}
-      <div class="result-success" in:fade={{ duration: 200 }}>
-        <span class="result-emoji">✅</span>
-        <span class="result-text">You got today's word!</span>
-        {#if dailyWord}
-          <span class="result-word">{dailyWord._spelling}</span>
+        <div class="daily-header">
+          <span class="daily-icon">📅</span>
+          <span class="daily-title">Daily Challenge — {monthName}</span>
+        </div>
+        {#if loading}
+          <p class="daily-hint">Loading…</p>
+        {:else}
+          <p class="daily-hint">One word. One chance. Ready?</p>
         {/if}
       </div>
-    {:else}
-      <div class="result-fail" in:fade={{ duration: 200 }}>
-        <span class="result-emoji">❌</span>
-        <span class="result-text">Today's word was:</span>
-        {#if dailyWord}
-          <span class="result-word">{dailyWord._spelling}</span>
-        {/if}
+    {:else if phase === 'playing' && dailyWord}
+      <!-- ── Playing: definition + input ── -->
+      <div class="daily-header">
+        <span class="daily-icon">📅</span>
+        <span class="daily-title">Daily Challenge — {monthName}</span>
+      </div>
+
+      <div class="daily-definition">
+        <p>{dailyWord.definition}</p>
+      </div>
+
+      <div class="daily-pronounce">
+        <PronounceButton
+          spelling={dailyWord._spelling}
+          {lang}
+          disabled={false}
+        />
+      </div>
+
+      <div class="daily-input-group">
+        <!-- svelte-ignore a11y_autofocus -->
+        <input
+          type="text"
+          class="daily-input"
+          placeholder="Type your spelling…"
+          bind:value={attempt}
+          onkeydown={handleKeydown}
+          autocomplete="off"
+          autocapitalize="off"
+          autofocus
+        />
+        <button
+          class="daily-submit"
+          onclick={submitAttempt}
+          disabled={!attempt.trim()}
+        >
+          Enter
+        </button>
+      </div>
+    {:else if phase === 'result'}
+      <!-- ── Result ── -->
+      <div class="daily-header">
+        <span class="daily-icon">📅</span>
+        <span class="daily-title">Daily Challenge — {monthName}</span>
+      </div>
+
+      {#if resultCorrect}
+        <div class="result-success" in:fade={{ duration: 200 }}>
+          <span class="result-emoji">✅</span>
+          <span class="result-text">You got today's word!</span>
+          {#if dailyWord}
+            <span class="result-word">{dailyWord._spelling}</span>
+          {/if}
+        </div>
+      {:else}
+        <div class="result-fail" in:fade={{ duration: 200 }}>
+          <span class="result-emoji">❌</span>
+          <span class="result-text">Today's word was:</span>
+          {#if dailyWord}
+            <span class="result-word">{dailyWord._spelling}</span>
+          {/if}
+        </div>
+      {/if}
+
+      <button class="share-btn" onclick={async (e) => {
+        e.stopPropagation();
+        const ok = await copyToClipboard(sharePreview());
+        if (ok) {
+          shareCopied = true;
+          setTimeout(() => { shareCopied = false; }, 2000);
+        }
+      }}>
+        📤 {shareCopied ? 'Copied!' : 'Share'}
+      </button>
+
+      <div class="share-preview">
+        <pre>{sharePreview()}</pre>
       </div>
     {/if}
-
-    <button class="share-btn" onclick={async () => {
-      const ok = await copyToClipboard(sharePreview());
-      if (ok) {
-        shareCopied = true;
-        setTimeout(() => { shareCopied = false; }, 2000);
-      }
-    }}>
-      📤 {shareCopied ? 'Copied!' : 'Share'}
-    </button>
-
-    <div class="share-preview">
-      <pre>{sharePreview()}</pre>
-    </div>
   </div>
-{/if}
+</div>
 
 {#if error}
-  <div class="daily-error" transition:slide={{ duration: 200 }}>
+  <div class="daily-error" transition:slide={{ duration: prefersReducedMotion ? 0 : 200 }}>
     <p>{error}</p>
     <button onclick={() => { error = null; phase = 'idle'; }}>Dismiss</button>
   </div>
 {/if}
 
 <style>
+  /* ── Overlay ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+  }
+
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    cursor: pointer;
+    z-index: 0;
+  }
+
+  /* ── Sheet card ── */
+  .sheet {
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+    background: var(--color-surface);
+    border-radius: calc(var(--radius) * 2);
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    text-align: center;
+    max-height: 90dvh;
+    overflow-y: auto;
+    font-family: inherit;
+    color: var(--color-text-primary);
+  }
+
   /* ── Close button ── */
   .close-btn {
     position: absolute;
@@ -215,7 +263,7 @@
     justify-content: center;
     cursor: pointer;
     transition: background var(--transition), color var(--transition);
-
+    z-index: 1;
   }
 
   .close-btn:hover {
@@ -223,51 +271,24 @@
     color: white;
   }
 
-  /* ── Base card ── */
-  .daily-card {
-    position: relative;
-    width: 100%;
-    max-width: 360px;
-    background: var(--color-surface);
-    border-radius: var(--radius);
-    padding: var(--space-5);
+  /* ── Idle prompt (clickable area inside sheet) ── */
+  .daily-prompt {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--space-4);
-    text-align: center;
-    transition:
-      border-color var(--transition),
-      box-shadow var(--transition),
-      transform var(--transition);
-    font-family: inherit;
-    color: var(--color-text-primary);
-  }
-
-  .daily-card.idle {
-    border: 2px solid var(--color-secondary);
+    width: 100%;
     cursor: pointer;
+    border: 2px solid var(--color-secondary);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
   }
 
-  .daily-card.idle:hover:not(:disabled) {
+  .daily-prompt:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border-color: var(--color-primary);
-  }
-
-  .daily-card.idle:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .daily-card.playing,
-  .daily-card.result,
-  .daily-card.completed {
-    border: 2px solid transparent;
-  }
-
-  .daily-card.completed {
-    opacity: 0.85;
   }
 
   /* ── Header ── */
@@ -292,6 +313,7 @@
   .daily-hint {
     font-size: var(--font-size-xs);
     color: var(--color-text-secondary);
+    margin: 0;
   }
 
   /* ── Definition ── */
@@ -443,8 +465,13 @@
 
   /* ── Error ── */
   .daily-error {
+    position: fixed;
+    bottom: var(--space-4);
+    left: 50%;
+    transform: translateX(-50%);
     width: 100%;
     max-width: 360px;
+    z-index: calc(var(--z-overlay) + 1);
     background: color-mix(in oklch, var(--color-error) 8%, var(--color-surface));
     border: 1px solid color-mix(in oklch, var(--color-error) 25%, transparent);
     border-radius: var(--radius);
@@ -459,6 +486,7 @@
     font-size: var(--font-size-xs);
     color: var(--color-error);
     flex: 1;
+    margin: 0;
   }
 
   .daily-error button {
@@ -476,8 +504,10 @@
 
   /* ── Mobile ── */
   @media (max-width: 375px) {
-    .daily-card {
+    .sheet {
       padding: var(--space-4);
+      gap: var(--space-3);
+      max-height: 85dvh;
     }
 
     .daily-title {
