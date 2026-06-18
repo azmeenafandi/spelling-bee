@@ -10,30 +10,29 @@
   const dispatch = createEventDispatcher<{ close: void }>();
 
   // ── State ──
-  let dailyWord: DailyResponse | null = $state(null);
-  let loading = $state(false);
-  let error: string | null = $state(null);
-  let phase: 'idle' | 'playing' | 'result' = $state('idle');
-  let attempt = $state('');
-  let resultCorrect = $state(false);
-  let submitted = $state(false);
+  let dailyWord: DailyResponse | null = null;
+  let loading = false;
+  let error: string | null = null;
+  let phase: 'idle' | 'playing' | 'result' = 'idle';
+  let attempt = '';
+  let resultCorrect = false;
+  let submitted = false;
 
   // ── Derived ──
-  let today = $derived(new Date().toISOString().slice(0, 10));
-  let monthName = $derived(
-    new Date().toLocaleDateString('en-GB', { month: 'long', day: 'numeric' })
-  );
-  let lang = $derived(
+  $: today = new Date().toISOString().slice(0, 10);
+  $: monthName = new Date().toLocaleDateString('en-GB', { month: 'long', day: 'numeric' });
+  $: lang = (
     ($variant === 'british' ? 'en-GB' : 'en-US') as 'en-GB' | 'en-US'
   );
-  let alreadyCompleted = $derived(getDailyResult(today));
-  let sharePreview = $derived(() => {
+  let alreadyCompleted: boolean | null = getDailyResult(today);
+  $: alreadyCompleted = getDailyResult(today);
+  $: sharePreview = () => {
     return generateDailyShareCard({
       date: today,
       correct: alreadyCompleted === true,
     });
-  });
-  let shareCopied = $state(false);
+  };
+  let shareCopied = false;
 
   // ── Actions ──
   async function startDaily() {
@@ -219,7 +218,7 @@
     justify-content: center;
     cursor: pointer;
     transition: background var(--transition), color var(--transition);
-    z-index: 1;
+
   }
 
   .close-btn:hover {
