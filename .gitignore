@@ -7,3 +7,5 @@ build/
 .DS_Store
 *.local
 dev.sh
+pnpm-lock.yaml
+pnpm-workspace.yaml

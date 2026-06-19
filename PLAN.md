@@ -1,8 +1,8 @@
 # Spelling Bee — Feature Plan
 
-> **Date**: 2026-06-18  
-> **Status**: Release 1 implementation in progress  
-> **Current state**: Functional MVP — 477 words, British/American modes, streak-based tier progression, scoring/ranks/achievements, two-attempt mechanic, anonymous error reporting.
+> **Date**: 2026-06-19  
+> **Status**: Release 1 complete ✅ — Release 2 next  
+> **Current state**: 477 words, British/American modes, streak-based tier progression, scoring/ranks/achievements, two-attempt mechanic, anonymous error reporting, Svelte 5 full runes, Scholar's Ink design system.
 
 ---
 
@@ -125,13 +125,35 @@ Polish and depth. These make the app feel complete.
 
 ---
 
+## Release 1 — Implementation Notes
+
+### 1. Daily Challenge ✅
+- **API**: `GET /api/daily?variant=british` — deterministic word from `YYYY-MM-DD` hash
+- **Component**: `DailyChallenge.svelte` — centered overlay with backdrop, close button, pronounce, spelling input
+- **Storage**: `localStorage` key `spelling-bee:daily:YYYY-MM-DD` — prevents replay
+- **Integration**: Button rendered inside VariantSelect via `children` snippet → `daily-slot` div
+
+### 2. Sound & Haptics ✅
+- **Audio**: `src/lib/audio.ts` — Web Audio API synthesized tones (correct chime, wrong thud, tier-up fanfare, game-over descent, achievement sparkle)
+- **Haptics**: `navigator.vibrate(15)` on mobile for correct/wrong/tier-up
+- **Accessibility**: All functions no-op when `prefers-reduced-motion` is set
+- **Init**: AudioContext created lazily on first user gesture (Start button / Play Again)
+
+### 3. Share Results ✅
+- **Share card**: `src/lib/share.ts` — Wordle-style emoji grid with `✅`/`🟡`/`❌` attempt pattern
+- **Web Share API**: `navigator.share()` for native OS share sheet (Android/iOS/Chrome desktop)
+- **Fallback**: Clipboard copy via `navigator.clipboard.writeText()` with `document.execCommand('copy')` backup
+- **Integration**: Share buttons on GameOverScreen and DailyChallenge result
+
+---
+
 ## Summary Table
 
 | # | Feature | Complexity | Principle | Ship With |
 |---|---------|-----------|-----------|-----------|
-| 1 | Daily Challenge | Low | Progress is visible | **Release 1** |
-| 2 | Sound & Haptics | Low–Med | Tactile confidence | **Release 1** |
-| 3 | Share Results | Low | Progress is visible | **Release 1** |
+| 1 | Daily Challenge | Low | ✅ Complete | Progress is visible | **Release 1** |
+| 2 | Sound & Haptics | Low–Med | ✅ Complete | Tactile confidence | **Release 1** |
+| 3 | Share Results | Low | ✅ Complete | Progress is visible | **Release 1** |
 | 4 | Statistics Dashboard | Medium | Progress is visible | Release 2 |
 | 5 | PWA / Installable | Medium | Scholar's toolkit | Release 2 |
 | 6 | Word Review | Medium | Progress is visible | Release 2 |
