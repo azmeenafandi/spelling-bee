@@ -63,6 +63,7 @@
     {disabled}
     autocomplete="off"
     autocapitalize="off"
+    autocorrect="off"
     spellcheck="false"
     onkeydown={handleKeydown}
     class="spelling-input"
