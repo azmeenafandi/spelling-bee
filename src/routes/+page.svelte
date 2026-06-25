@@ -64,6 +64,8 @@
   let correctFlash = $state<'green' | 'amber' | null>(null);
   let showPhew = $state(false);
   let tierToastVisible = $state(false);
+  let safetyNetAvailable = $state(true);
+  let safetyNetToastVisible = $state(false);
   let newSessionAchievements = $state<Array<{
     key: string;
     name: string;
@@ -368,6 +370,28 @@
 
   // ── Core: Wrong Second Attempt → Game Over ──
   function handleWrongSecondAttempt(ans: string) {
+    // ── Streak Safety Net ──
+    if (safetyNetAvailable) {
+      safetyNetAvailable = false;
+      $streak = 0;
+      previousTier = 1; // Reset tier tracking so tier-up doesn't re-trigger
+      safetyNetToastVisible = true;
+      triggerHaptic();
+      playCorrect(); // positive sound for the save
+      setTimeout(() => {
+        safetyNetToastVisible = false;
+      }, 2000);
+
+      // Track attempt outcome for share card
+      wordsAttempted += 1;
+      attemptPattern = [...attemptPattern, 'wrong'];
+
+      // Reset for next word
+      $currentAttempt = 1;
+      loadWord();
+      return;
+    }
+
     gameOverAnswer = ans;
     $gameState = 'game-over';
 
@@ -410,6 +434,8 @@
     wordsAttempted = 0;
     wordsCorrect = 0;
     attemptPattern = [];
+    safetyNetAvailable = true;
+    safetyNetToastVisible = false;
   }
 
   // ── Event Handlers ──
@@ -473,6 +499,17 @@
     <!-- Score board -->
     <div class="top-bar">
       <ScoreBoard sessionScore={$sessionScore} highScore={$highScore} {rank} />
+    </div>
+
+    <!-- Safety net indicator -->
+    <div class="safety-net-row">
+      <span
+        class="safety-net"
+        class:used={!safetyNetAvailable}
+        title={safetyNetAvailable ? 'Safety Net available — streak protected once' : 'Safety Net used'}
+      >
+        🛡️
+      </span>
     </div>
 
     <!-- Tier indicator -->
@@ -602,6 +639,17 @@
       aria-live="polite"
     >
       ▲ Tier {currentTierValue} — {getTierName(currentTierValue)}
+    </div>
+  {/if}
+
+  {#if safetyNetToastVisible}
+    <div
+      class="safety-net-toast"
+      transition:fly={{ y: prefersReducedMotion ? 0 : -30, duration: prefersReducedMotion ? 0 : 300 }}
+      role="status"
+      aria-live="polite"
+    >
+      🛡️ Safety Net! Streak reset.
     </div>
   {/if}
 {/if}
@@ -766,6 +814,48 @@
     z-index: var(--z-toast);
     background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
     color: var(--color-surface);
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    max-width: calc(100vw - 2 * var(--space-4));
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Safety net indicator ── */
+  .safety-net-row {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: calc(-1 * var(--space-2));
+  }
+
+  .safety-net {
+    font-size: var(--font-size-lg);
+    cursor: default;
+    transition: opacity 0.3s, filter 0.3s, transform 0.3s;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
+  }
+
+  .safety-net.used {
+    opacity: 0.3;
+    filter: grayscale(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.06));
+    transform: scale(0.9);
+  }
+
+  /* ── Safety net toast ── */
+  .safety-net-toast {
+    position: fixed;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--z-toast);
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    color: #052e16;
     padding: var(--space-3) var(--space-5);
     border-radius: var(--radius);
     font-size: var(--font-size-sm);
