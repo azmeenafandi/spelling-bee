@@ -85,7 +85,47 @@
   <div class="sheet" transition:fly={{ y: 80, duration: prefersReducedMotion ? 0 : 400, delay: prefersReducedMotion ? 0 : 50 }}>
     <button class="close-btn" onclick={handleClose} aria-label="Close daily challenge">✕</button>
 
-    {#if alreadyCompleted !== null}
+    {#if phase === 'result'}
+      <!-- ── Result ── -->
+      <div class="daily-header">
+        <span class="daily-icon">📅</span>
+        <span class="daily-title">Daily Challenge — {monthName}</span>
+      </div>
+
+      {#if resultCorrect}
+        <div class="result-success" in:fade={{ duration: 200 }}>
+          <span class="result-emoji">✅</span>
+          <span class="result-text">You got today's word!</span>
+          {#if dailyWord}
+            <span class="result-word">{dailyWord._spelling}</span>
+          {/if}
+        </div>
+      {:else}
+        <div class="result-fail" in:fade={{ duration: 200 }}>
+          <span class="result-emoji">❌</span>
+          <span class="result-text">Today's word was:</span>
+          {#if dailyWord}
+            <span class="result-word">{dailyWord._spelling}</span>
+          {/if}
+        </div>
+      {/if}
+
+      <button class="share-btn" onclick={async (e) => {
+        e.stopPropagation();
+        const { text, url } = sharePreview();
+        const ok = await shareResults(text, url);
+        if (ok) {
+          shareCopied = true;
+          setTimeout(() => { shareCopied = false; }, 2000);
+        }
+      }}>
+        📤 {shareCopied ? 'Copied!' : 'Share'}
+      </button>
+
+      <div class="share-preview">
+        <pre>{sharePreview().text}</pre>
+      </div>
+    {:else if alreadyCompleted !== null}
       <!-- ── Already completed ── -->
       <div class="daily-header">
         <span class="daily-icon">📅</span>
@@ -156,46 +196,6 @@
         >
           Enter
         </button>
-      </div>
-    {:else if phase === 'result'}
-      <!-- ── Result ── -->
-      <div class="daily-header">
-        <span class="daily-icon">📅</span>
-        <span class="daily-title">Daily Challenge — {monthName}</span>
-      </div>
-
-      {#if resultCorrect}
-        <div class="result-success" in:fade={{ duration: 200 }}>
-          <span class="result-emoji">✅</span>
-          <span class="result-text">You got today's word!</span>
-          {#if dailyWord}
-            <span class="result-word">{dailyWord._spelling}</span>
-          {/if}
-        </div>
-      {:else}
-        <div class="result-fail" in:fade={{ duration: 200 }}>
-          <span class="result-emoji">❌</span>
-          <span class="result-text">Today's word was:</span>
-          {#if dailyWord}
-            <span class="result-word">{dailyWord._spelling}</span>
-          {/if}
-        </div>
-      {/if}
-
-      <button class="share-btn" onclick={async (e) => {
-        e.stopPropagation();
-        const { text, url } = sharePreview();
-        const ok = await shareResults(text, url);
-        if (ok) {
-          shareCopied = true;
-          setTimeout(() => { shareCopied = false; }, 2000);
-        }
-      }}>
-        📤 {shareCopied ? 'Copied!' : 'Share'}
-      </button>
-
-      <div class="share-preview">
-        <pre>{sharePreview().text}</pre>
       </div>
     {/if}
   </div>
