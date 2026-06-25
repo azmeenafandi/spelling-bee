@@ -155,7 +155,7 @@ Polish and depth. These make the app feel complete.
 | 2 | Sound & Haptics | Low–Med | ✅ Complete | Tactile confidence | **Release 1** |
 | 3 | Share Results | Low | ✅ Complete | Progress is visible | **Release 1** |
 | 4 | Statistics Dashboard | Medium | Progress is visible | Release 2 |
-| 5 | PWA / Installable | Medium | Scholar's toolkit | Release 2 |
+| 5 | PWA / Installable | Medium | ✅ Complete | Scholar's toolkit | **Release 2** |
 | 6 | Word Review | Medium | Progress is visible | Release 2 |
 | 7 | Practice Mode | Medium | Challenge w/o intimidation | Release 3 |
 | 8 | Streak Safety Net | Low | Challenge w/o intimidation | Release 3 |
