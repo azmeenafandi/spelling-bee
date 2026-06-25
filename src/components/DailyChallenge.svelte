@@ -195,7 +195,7 @@
       </button>
 
       <div class="share-preview">
-        <pre>{sharePreview()}</pre>
+        <pre>{sharePreview().text}</pre>
       </div>
     {/if}
   </div>
