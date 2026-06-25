@@ -12,7 +12,28 @@ const KEYS = {
   highScore: 'spelling-bee:high-score',
   achievements: 'spelling-bee:achievements',
   dailyResult: 'spelling-bee:daily-result',
+  theme: 'spelling-bee:theme',
 } as const;
+
+type Theme = 'system' | 'light' | 'dark';
+
+export function saveTheme(theme: Theme): void {
+  try {
+    localStorage.setItem(KEYS.theme, theme);
+  } catch {
+    /* silent */
+  }
+}
+
+export function getTheme(): Theme {
+  try {
+    const v = localStorage.getItem(KEYS.theme);
+    if (v === 'system' || v === 'light' || v === 'dark') return v;
+  } catch {
+    /* unavailable */
+  }
+  return 'system';
+}
 
 type Variant = 'british' | 'american';
 

@@ -54,6 +54,49 @@
 }
 
 /* ------------------------------------------------------------------
+   Dark Mode — prefers-color-scheme
+   ------------------------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: oklch(18% 0.02 260);
+    --color-surface: oklch(22% 0.02 260);
+    --color-text-primary: oklch(90% 0.01 260);
+    --color-text-secondary: oklch(68% 0.01 260);
+    --color-primary: oklch(65% 0.15 250);
+    --color-secondary: oklch(72% 0.12 85);
+    --color-success: oklch(65% 0.12 155);
+    --color-error: oklch(60% 0.18 20);
+    --color-warning: oklch(72% 0.12 75);
+  }
+}
+
+/* Manual dark mode override — higher specificity than media query */
+[data-theme="dark"] {
+  --color-background: oklch(18% 0.02 260);
+  --color-surface: oklch(22% 0.02 260);
+  --color-text-primary: oklch(90% 0.01 260);
+  --color-text-secondary: oklch(68% 0.01 260);
+  --color-primary: oklch(65% 0.15 250);
+  --color-secondary: oklch(72% 0.12 85);
+  --color-success: oklch(65% 0.12 155);
+  --color-error: oklch(60% 0.18 20);
+  --color-warning: oklch(72% 0.12 75);
+}
+
+/* Manual light mode override */
+[data-theme="light"] {
+  --color-background: oklch(96% 0.005 85);
+  --color-surface: oklch(100% 0 0);
+  --color-text-primary: oklch(15% 0.02 260);
+  --color-text-secondary: oklch(38% 0.01 260);
+  --color-primary: oklch(45% 0.18 250);
+  --color-secondary: oklch(65% 0.15 85);
+  --color-success: oklch(55% 0.14 155);
+  --color-error: oklch(45% 0.18 20);
+  --color-warning: oklch(65% 0.15 75);
+}
+
+/* ------------------------------------------------------------------
    Global Reset
    ------------------------------------------------------------------ */
 *,
@@ -75,6 +118,7 @@ body {
   color: var(--color-text-primary);
   min-height: 100dvh;
   overflow-x: hidden;
+  color-scheme: light dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

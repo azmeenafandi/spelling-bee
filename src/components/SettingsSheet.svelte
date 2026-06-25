@@ -1,7 +1,25 @@
 <script lang="ts">
   import { fade, slide } from 'svelte/transition';
   import { variant } from '$lib/stores';
-  import { exportData, importData } from '$lib/storage';
+  import { exportData, importData, saveTheme, getTheme } from '$lib/storage';
+
+  type Theme = 'system' | 'light' | 'dark';
+  let currentTheme = $state<Theme>(getTheme());
+
+  function applyTheme(theme: Theme) {
+    const root = document.documentElement;
+    if (theme === 'system') {
+      root.removeAttribute('data-theme');
+    } else {
+      root.setAttribute('data-theme', theme);
+    }
+  }
+
+  function setTheme(theme: Theme) {
+    currentTheme = theme;
+    applyTheme(theme);
+    saveTheme(theme);
+  }
 
   let { open, onClose }: { open: boolean; onClose?: () => void } = $props();
 
@@ -91,6 +109,7 @@
       localStorage.removeItem('spelling-bee:variant');
       localStorage.removeItem('spelling-bee:high-score');
       localStorage.removeItem('spelling-bee:achievements');
+      localStorage.removeItem('spelling-bee:theme');
       // Reset the store to defaults
       $variant = 'british';
       // Force reload to fully reset all stores
@@ -137,6 +156,47 @@
             <span class="toggle-thumb"></span>
           </span>
         </button>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Theme Toggle -->
+      <div class="setting-row">
+        <div class="setting-info">
+          <span class="setting-label">Theme</span>
+          <span class="setting-value">
+            {currentTheme === 'system' ? 'System 🌓' : currentTheme === 'light' ? 'Light ☀️' : 'Dark 🌙'}
+          </span>
+        </div>
+        <div class="theme-options" role="radiogroup" aria-label="Theme">
+          <button
+            class="theme-btn"
+            class:active={currentTheme === 'system'}
+            onclick={() => setTheme('system')}
+            aria-checked={currentTheme === 'system'}
+            role="radio"
+          >
+            🌓
+          </button>
+          <button
+            class="theme-btn"
+            class:active={currentTheme === 'light'}
+            onclick={() => setTheme('light')}
+            aria-checked={currentTheme === 'light'}
+            role="radio"
+          >
+            ☀️
+          </button>
+          <button
+            class="theme-btn"
+            class:active={currentTheme === 'dark'}
+            onclick={() => setTheme('dark')}
+            aria-checked={currentTheme === 'dark'}
+            role="radio"
+          >
+            🌙
+          </button>
+        </div>
       </div>
 
       <hr class="divider" />
@@ -338,6 +398,41 @@
 
   .toggle-track.active .toggle-thumb {
     transform: translateX(22px);
+  }
+
+  /* Theme selector */
+  .theme-options {
+    display: flex;
+    gap: var(--space-1);
+    flex-shrink: 0;
+  }
+
+  .theme-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius);
+    border: 2px solid transparent;
+    background: var(--color-background);
+    font-size: 1.125rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color var(--transition), background var(--transition);
+  }
+
+  .theme-btn.active {
+    border-color: var(--color-primary);
+    background: color-mix(in oklch, var(--color-primary) 12%, var(--color-surface));
+  }
+
+  .theme-btn:hover:not(.active) {
+    background: color-mix(in oklch, var(--color-text-secondary) 10%, var(--color-background));
+  }
+
+  .theme-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 
   /* Action buttons */
