@@ -12,3 +12,4 @@ pnpm-workspace.yaml
 scripts/
 static/icon-512.png:Zone.Identifier
 static/icon-192.png:Zone.Identifier
+morewords.txt
