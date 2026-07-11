@@ -1,8 +1,8 @@
 # Spelling Bee — Feature Plan
 
-> **Date**: 2026-06-19  
-> **Status**: Release 1 complete ✅ — Release 2 next  
-> **Current state**: 477 words, British/American modes, streak-based tier progression, scoring/ranks/achievements, two-attempt mechanic, anonymous error reporting, Svelte 5 full runes, Scholar's Ink design system.
+> **Date**: 2026-06-25  
+> **Status**: Release 1 ✅, Release 2 ✅ — Release 3 next  
+> **Current state**: 18,000+ words (scored with frequency + length + spelling features), British/American modes, streak-based tier progression, scoring/ranks/achievements, two-attempt mechanic, anonymous error reporting, Svelte 5 runes mode, Scholar's Ink design system, Dark Mode, PWA.
 
 ---
 
@@ -158,9 +158,29 @@ Polish and depth. These make the app feel complete.
 | 5 | PWA / Installable | Medium | ✅ Complete | Scholar's toolkit | **Release 2** |
 | 6 | Word Review | Medium | Progress is visible | Release 2 |
 | 7 | Practice Mode | Medium | Challenge w/o intimidation | Release 3 |
-| 8 | Streak Safety Net | Low | Challenge w/o intimidation | Release 3 |
-| 9 | Dark Mode | Low | Scholar's toolkit | Release 3 |
+| 8 | Streak Safety Net | Low | ✅ Complete | Challenge w/o intimidation | **Release 3** |
+| 9 | Dark Mode | Low | ✅ Complete | Scholar's toolkit | **Release 3** |
 | 10 | Adaptive Difficulty | Med–High | Challenge w/o intimidation | Release 4 |
+
+### Streak Safety Net ✅
+- **State**: `safetyNetAvailable = $state(true)` in `+page.svelte`
+- **Trigger**: In `handleWrongSecondAttempt`, when `safetyNetAvailable` is true — instead of game over: reset streak to 0, mark safety net used, play sound, load next word
+- **Shield indicator**: `🛡️` icon between ScoreBoard and TierIndicator, dimmed/broken when used
+- **Toast**: "🛡️ Safety Net! Streak reset." shown for 2 seconds via `fly` transition
+- **One per session**: Resets to `true` on "Play Again"
+
+### Dark Mode ✅
+- **CSS**: `@media (prefers-color-scheme: dark)` for automatic, `[data-theme="dark"]` for manual override, `[data-theme="light"]` for forced light
+- **Tokens**: All OKLCH — deeper backgrounds (oklch 18%), lighter text (oklch 90%), adjusted accent colours
+- **Toggle**: SettingsSheet has three options (System / Light / Dark) with radio-button ARIA semantics
+- **Persistence**: `localStorage` key `spelling-bee:theme`, restored on mount in `+layout.svelte`
+- **Meta tag**: `<meta name="color-scheme" content="light dark" />` in `app.html` prevents flash of wrong theme
+
+### PWA / Installable ✅
+- **Manifest**: `static/manifest.json` with name, icons (192px, 512px), standalone display, Scholar's Ink theme colour
+- **Service worker**: `src/service-worker.ts` — caches app shell on install, purges old versioned caches on activate
+- **Meta tags**: manifest link + color-scheme in `src/app.html`
+- **Install prompt**: Browser-native (appears automatically after a few visits on Android/Chrome desktop)
 
 ---
 

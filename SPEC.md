@@ -1,8 +1,8 @@
 # Spelling Bee — System Specification
 
-> **Status**: MVP (functional)  
+> **Status**: Feature-complete — Daily Challenge, Sound & Haptics, Share Results, Streak Safety Net, Dark Mode, PWA  
 > **Hosting**: Cloudflare Pages (free tier)  
-> **Last updated**: 2026-06-13
+> **Last updated**: 2026-07-11
 
 ---
 
@@ -450,9 +450,10 @@ On game over, session score is compared to the stored high score. If beaten, the
 | Screen | Description |
 |--------|-------------|
 | **Variant Select** | Two large buttons: "British English 🇬🇧" / "American English 🇺🇸". Persists choice to `localStorage`. Only shown on first visit or when the user explicitly changes it. |
-| **Game** | Definition text (large, centred), "🔊 Pronounce" button, text input field, live score + rank, tier indicator, streak counter, high score, settings gear icon (⚙), report flag (🚩). |
-| **Game Over** | Correct spelling revealed, final score, rank earned, comparison to high score, "Play Again" button, achievements unlocked this session, report flag on revealed word. |
-| **Settings** | Bottom sheet: variant toggle, export/import data as JSON file, reset all data with confirmation. |
+| **Game** | Definition text (large, centred), "🔊 Pronounce" button, text input field, live score + rank, tier indicator, streak counter, high score, settings gear icon (⚙), report flag (🚩), Daily Challenge button, safety net indicator (🛡️). |
+| **Game Over** | Correct spelling revealed, final score, rank earned, comparison to high score, "Play Again" button, achievements unlocked this session, report flag on revealed word, **Share Results** button via Web Share API (with clipboard fallback). |
+| **Settings** | Bottom sheet: variant toggle, **Dark Mode toggle** (System / Light / Dark via `data-theme` attribute), export/import data as JSON file, reset all data with confirmation. |
+| **Daily Challenge** | Overlay with one word per day (deterministic per variant via date-based hash), single attempt, reveals answer on submit, persists result in `localStorage`, share button for daily result card. Accessible from Variant Select screen. |
 
 ### 7.2 Pronounce Button
 
@@ -466,9 +467,13 @@ On game over, session score is compared to the stored high score. If beaten, the
 
 > For simplicity in v1, the `/api/word` response includes `_spelling` (for pronunciation), `_obscurity`, and `_length` (for score calculation). The frontend passes `_spelling` directly to `speechSynthesis` without rendering it. The underscore prefix signals "internal use only — do not display."
 
+### 7.2.1 Input Autocorrect
+
+- The spelling input field includes `autocorrect="off"` and `spellcheck="false"` to prevent browser autocorrect and spellcheck from interfering with spelling attempts.
+
 ### 7.3 Spelling Input
 
-- `<input type="text">` with `autocomplete="off"` and `autocapitalize="off"`.
+- `<input type="text">` with `autocomplete="off"`, `autocapitalize="off"`, **`autocorrect="off"`**, and `spellcheck="false"`.
 - Pressing **Enter** triggers the check (equivalent to clicking the "Enter" button).
 - Input is trimmed of leading/trailing whitespace before submission.
 - After submitting, the input is **cleared** and re-focused for the next word (if the game continues).
@@ -484,6 +489,8 @@ All state lives in the browser via Svelte writable stores. No server-side sessio
 | Selected variant | `localStorage` (Svelte store `variant`) | Page refresh, browser restart |
 | High score | `localStorage` (Svelte store `highScore`) | Page refresh, browser restart |
 | Earned achievements | `localStorage` (Svelte store `achievements`) | Page refresh, browser restart (forever) |
+| Theme preference | `localStorage` (`spelling-bee:theme` — `'system'`, `'light'`, or `'dark'`) | Page refresh, browser restart |
+| Daily result | `localStorage` (`spelling-bee:daily-result` — `{ [date: string]: boolean }`) | Page refresh, browser restart (per date) |
 | Session score | Svelte store `sessionScore` | Lost on page refresh or game over |
 | Streak counter | Svelte store `streak` | Lost on page refresh or game over |
 | Current tier | Derived from `streak` via `getTierFromStreak()` | Lost on page refresh or game over |
@@ -491,6 +498,8 @@ All state lives in the browser via Svelte writable stores. No server-side sessio
 | Current word data | Svelte store `currentWord` (id, definition, _spelling, _obscurity, _length) | Lost on page refresh or game over |
 | Game state | Svelte store `gameState` (`'variant-select'` / `'loading'` / `'playing'` / `'checking'` / `'wrong'` / `'game-over'`) | Resets on game over |
 | Current attempt | Svelte store `currentAttempt` (1 or 2) | Resets per word |
+| Safety net available | Component-level `$state` boolean (`safetyNetAvailable`) | Lost on page refresh (used once per session) |
+| Audio initialised | Component-level `$state` boolean (`audioInitialised`) | Lost on page refresh (re-initialised on first user gesture) |
 
 ---
 
@@ -541,9 +550,17 @@ The D1 table can be extended at any time via `wrangler d1 execute` or a migratio
 | D1 | Free tier (500 MB, 5 DBs) | $0.00 |
 | **Total** | | **$0.00/month** |
 
-### 11.2 Framework Choice: Svelte
+### 11.2 Framework Choice: Svelte 5 (runes mode)
 
-**Rationale**: Svelte compiles components to vanilla JS at build time — no virtual DOM, no runtime framework shipped to the browser. The result is a bundle measured in kilobytes, ideal for mobile-first. Svelte's built-in `transition:` and `animate:` directives map directly to our visual feedback requirements (red shake, green flash, tier-up toasts, confetti). Its reactive declarations (`$:`) eliminate boilerplate for derived state like tier from streak, or rank from score.
+**Rationale**: Svelte compiles components to vanilla JS at build time — no virtual DOM, no runtime framework shipped to the browser. The result is a bundle measured in kilobytes, ideal for mobile-first. Svelte's built-in `transition:` and `animate:` directives map directly to our visual feedback requirements (red shake, green flash, tier-up toasts, confetti).
+
+**Svelte 5 runes**: The project uses Svelte 5 with `compilerOptions.runes: true`, enabling the new runes API throughout:
+- **`$state()`** for reactive local component state (replaces `let x = ...` with implicit reactivity)
+- **`$props()`** for component props with TypeScript generics (replaces `export let`)
+- **`$derived()`** for computed values that update automatically (replaces `$:` derived declarations)
+- **`$effect()`** for side effects that respond to reactive dependencies (replaces `$:` side-effect statements)
+
+There are no `$:` Svelte 4 reactive declarations anywhere in the codebase — all reactivity uses the runes API.
 
 Build output is static (no SSR needed) — deployed as a standard Pages static site with Functions for the API layer.
 
@@ -552,24 +569,35 @@ Build output is static (no SSR needed) — deployed as a standard Pages static s
 ```
 spelling_bee/
 ├── SPEC.md                     # This document
-├── DEPLOY.md                   # Deployment checklist
+├── DEPLOY.md                   # Deployment checklist (optional)
+├── dev.sh                      # Local dev server script (fresh D1, auto-seed)
 ├── wrangler.jsonc              # Pages + D1 configuration
 ├── package.json
 ├── svelte.config.js
 ├── vite.config.ts
 ├── tsconfig.json
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # GitHub Actions: deploy to Cloudflare Pages on push to main
+├── static/
+│   ├── manifest.json           # PWA manifest (name, icons, display, theme_color)
+│   ├── icon-192.png            # PWA icon (192x192)
+│   ├── icon-512.png            # PWA icon (512x512)
+│   └── favicon.png
 ├── src/
-│   ├── app.html                # Svelte shell (mount point)
-│   ├── app.css                 # Global styles, CSS custom properties
+│   ├── app.html                # Svelte shell (mount point, includes manifest link, color-scheme meta)
+│   ├── app.css                 # Global styles, OKLCH custom properties, Dark Mode (media query + data-theme)
 │   ├── lib/
-│   │   ├── api.ts              # Typed fetch wrappers for /api/word, /api/check, /api/report
+│   │   ├── api.ts              # Typed fetch wrappers for /api/word, /api/check, /api/report, /api/daily
+│   │   ├── audio.ts            # Web Audio API sound effects (correct, wrong, tier-up, game-over, achievement) + haptics
 │   │   ├── game.ts             # Scoring engine, tier logic, rank titles, achievement evaluation
+│   │   ├── share.ts            # Web Share API + clipboard fallback, game & daily share card generators
 │   │   ├── speech.ts           # Web Speech API wrapper (speakWord)
-│   │   ├── storage.ts          # localStorage helpers + export/import
-│   │   └── stores.ts           # Svelte writable stores (10 stores, 3 persisted)
+│   │   ├── storage.ts          # localStorage helpers + export/import, theme & daily result persistence
+│   │   └── stores.ts           # Svelte writable stores (10 stores, 3 persisted); theme stored separately
 │   ├── routes/
-│   │   ├── +layout.svelte      # Root layout (imports app.css globally)
-│   │   └── +page.svelte        # Main game page: state machine, component wiring
+│   │   ├── +layout.svelte      # Root layout (imports app.css, applies persisted theme on mount via data-theme)
+│   │   └── +page.svelte        # Main game page: state machine, component wiring, sound triggers, safety net
 │   └── components/
 │       ├── VariantSelect.svelte
 │       ├── DefinitionDisplay.svelte
@@ -579,35 +607,48 @@ spelling_bee/
 │       ├── TierIndicator.svelte
 │       ├── GameOverScreen.svelte
 │       ├── AchievementToast.svelte
+│       ├── DailyChallenge.svelte   # Daily Challenge overlay (one word/day, deterministic, single attempt)
 │       ├── ReportSheet.svelte
-│       └── SettingsSheet.svelte
+│       └── SettingsSheet.svelte    # Dark Mode toggle (System/Light/Dark), variant, export/import, reset
 ├── functions/                  # Pages Functions (API)
 │   └── api/
 │       ├── word.ts             # GET /api/word
 │       ├── check.ts            # POST /api/check
+│       ├── daily.ts            # GET /api/daily — deterministic daily word via date+variant hash
 │       └── report.ts           # POST /api/report
 ├── migrations/
 │   ├── 0001_create_words.sql
 │   └── 0002_create_reports.sql
-└── seed/
-    └── seed.sql
+├── seed/
+│   ├── seed.sql                # Initial word seed
+│   ├── words.sql               # Unified word list (477 words, used by dev.sh)
+│   ├── morewords.sql           # Supplementary word additions
+│   └── extra-8plus.sql         # Additional 8+ letter words
 ```
 
 ### 11.4 Svelte-Specific Design Decisions
 
-- **Svelte 5 + legacy compatibility**: The project uses Svelte 5.56 with `compilerOptions.compatibility.componentApi: 4`. A few components use native Svelte 5 patterns (`$state()`, `$props()`, `onclick=`) where the legacy `createEventDispatcher` pattern proved incompatible.
-- **Single-page app**: The game has three screens (VariantSelect, Game, GameOver) plus overlays (Settings, Report) but only one route. Screen switching is driven by the `$gameState` Svelte store, not SvelteKit routing. This keeps game state in memory without page navigations.
-- **Stores for cross-component state**: Svelte writable stores for `sessionScore`, `highScore`, `streak`, `tier`, `playedIds`, `achievements`, `variant`, `gameState`, `currentWord`, and `currentAttempt`. Components receive data as props where possible; only screen-level components (VariantSelect, SettingsSheet) write to stores.
-- **Transitions**: `fly` for tier-up toasts, `slide` for bottom sheets and game-over overlay, `fade` for backdrop, CSS `@keyframes` for shake, pulse, confetti, and shimmer effects.
+- **Svelte 5 runes**: The project uses Svelte 5 with `compilerOptions.runes: true` (no legacy `componentApi` compatibility). All components use `$state()`, `$props()`, `$derived()`, and `$effect()` exclusively. No `$:` Svelte 4 reactive declarations exist anywhere in the codebase. Props use TypeScript generics with `$props()`. Template event handlers use the runes-compatible `onclick=`, `onkeydown=` syntax.
+- **Single-page app**: The game has three screens (VariantSelect, Game, GameOver) plus overlays (Settings, Report, DailyChallenge) but only one route. Screen switching is driven by the `$gameState` Svelte store, not SvelteKit routing. This keeps game state in memory without page navigations.
+- **Stores for cross-component state**: Svelte writable stores for `sessionScore`, `highScore`, `streak`, `playedIds`, `achievements`, `variant`, `gameState`, `currentWord`, and `currentAttempt`. Components receive data as props where possible; only screen-level components (VariantSelect, SettingsSheet) write to stores.
+- **Transitions**: `fly` for tier-up toasts, `slide` for bottom sheets and overlays, `fade` for backdrop, CSS `@keyframes` for shake, pulse, confetti, and shimmer effects. All animations respect `prefers-reduced-motion`.
 - **Static adapter**: `@sveltejs/adapter-static` — builds to a `build/` directory deployed to Cloudflare Pages.
-- **`+layout.svelte`**: Required to import `app.css` globally so CSS custom properties (`--color-primary`, `--font-size-2xl`, etc.) are available to all components.
+- **`+layout.svelte`**: Required to import `app.css` globally so CSS custom properties (`--color-primary`, `--font-size-2xl`, etc.) are available to all components. Also applies persisted theme preference on mount via `data-theme` attribute.
+- **Service worker**: SvelteKit's built-in service worker (`src/service-worker.ts`) caches all build assets and files at install time, enabling offline loading. Registration is handled by SvelteKit via `kit.serviceWorker.register: true`.
+- **PWA**: A `manifest.json` (name, short_name, icons, display: standalone, theme_color) and two PWA icons (192×192, 512×512) enable installable app behaviour.
+- **Dark Mode**: Three-state theme toggle (System / Light / Dark) persisted to `localStorage`. Uses CSS custom properties with `@media (prefers-color-scheme: dark)` and a `[data-theme="dark"]` / `[data-theme="light"]` override with higher specificity. The theme preference is applied in `+layout.svelte` on mount.
+- **OKLCH colour palette**: All colours use the OKLCH colour space (`oklch(45% 0.18 250)`), providing perceptually uniform lightness and consistent saturation across light and dark themes. Named "Scholar's Ink" palette.
+- **Sound & Haptics**: Synthesised via Web Audio API (no external files) in `audio.ts`. Separate functions for correct, wrong, tier-up, game-over, and achievement sounds. Haptic feedback via `navigator.vibrate(15)` on capable devices. Audio context is created lazily on first user gesture (`initAudio()`). All sounds are no-ops when `prefers-reduced-motion: reduce` is active or when Web Audio is unavailable.
+- **Share Results**: Game-over screen includes a "Share Results" button using the Web Share API with clipboard fallback. Generates a formatted share card with date, score, rank, streak, tier, and emoji grid of attempt outcomes. Daily Challenge also has its own share card generator.
+- **Daily Challenge**: A separate overlay available from the Variant Select screen. Fetches a deterministic word via `GET /api/daily?variant=...` where the word ID is derived from a numeric hash of `date + variant`. Single attempt only — persists the boolean result to `localStorage`. Share button generates a daily-specific share card.
+- **Streak Safety Net**: The first game-over of each session is converted to a streak reset instead of ending the game. The player continues with streak = 0 and the safety net icon grays out. A green toast notification announces the save. This reduces frustration while keeping streaks meaningful.
+- **`color-scheme` meta tag**: `app.html` includes `<meta name="color-scheme" content="light dark">` so browser chrome and scrollbars adapt to the selected theme.
 
 ### 11.5 Deployment Commands
 
 ```bash
-# Local development
-npm run build
-npx wrangler pages dev build --d1=DB
+# Local development (convenience script — fresh D1 + seed)
+./dev.sh [port]
 
 # Build static output
 npm run build
@@ -618,20 +659,48 @@ npx wrangler d1 create spelling-bee-db
 # Apply migrations (local dev)
 npx wrangler d1 migrations apply spelling-bee-db --local
 
-# Seed word list (local dev)
-npx wrangler d1 execute spelling-bee-db --local --file=seed/seed.sql
+# Seed word list (local dev — use the unified file)
+npx wrangler d1 execute spelling-bee-db --local --file=seed/words.sql
 
 # Apply migrations (production)
 npx wrangler d1 migrations apply spelling-bee-db --remote
 
 # Seed word list (production)
-npx wrangler d1 execute spelling-bee-db --remote --file=seed/seed.sql
+npx wrangler d1 execute spelling-bee-db --remote --file=seed/words.sql
 
 # Deploy to Cloudflare Pages
 npx wrangler pages deploy build --project-name=spelling-bee
 ```
 
-**Note**: The `wrangler.jsonc` omits `database_id` — both local and remote databases auto-provision from `database_name`. For local dev, `pages dev` and `d1 execute` share the same `.wrangler/state` directory when `database_id` is absent.
+**Note**: The `wrangler.jsonc` includes `database_id` for production. For local dev, `dev.sh` strips the `database_id` line so `pages dev` and `d1 execute` share the same `.wrangler/state` directory (restored on exit via trap).
+
+### 11.6 Continuous Deployment
+
+[GitHub Actions](https://github.com/beerobee/spelling-bee/blob/main/.github/workflows/deploy.yml) automatically deploys to Cloudflare Pages on every push to `main`:
+
+```
+name: Deploy to Cloudflare Pages
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+      - run: npm run build
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy build --project-name=spelling-bee
+```
+
+Required secrets in the repository: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 
 ---
 
@@ -723,3 +792,9 @@ The following items are intentionally deferred for future consideration or discu
 | 2 | **Leaderboard + SSO** — Global leaderboard with Google/Apple sign-in? | A) Yes, with user accounts / B) No, keep it local-only | Deferred to v2 |
 | 3 | **Timer per word** — Add a time pressure element? | A) Yes, configurable countdown / B) No timer | Deferred |
 | 4 | **TTS pronunciation quality** — Improve pronunciation of complex words via better voice selection, slower rate for long words, and optional phonetic hints | A) Client-side voice/rate tuning / B) Phonetic column in DB / C) Both | **Deferred** — see src/lib/speech.ts |
+| 5 | **Daily Challenge** — One deterministic word per day per variant | A) Implemented via date+variant hash / B) Manual curation per day | **Implemented: A** |
+| 6 | **Sound & Haptics** — Synthesised sound effects and haptic feedback | A) Web Audio API synthesis + navigator.vibrate / B) Pre-recorded audio files | **Implemented: A** |
+| 7 | **Share Results** — Share game results via Web Share API or clipboard | A) Web Share API with clipboard fallback / B) Share image generation | **Implemented: A** |
+| 8 | **Streak Safety Net** — Convert first game-over to streak reset | A) One free save per session / B) No safety net | **Implemented: A** |
+| 9 | **Dark Mode** — Light/Dark/System theme toggle | A) CSS custom properties with media query + data-theme override / B) Separate CSS files | **Implemented: A** |
+| 10 | **PWA** — Installable web app with service worker | A) SvelteKit service worker + manifest.json + icons / B) No PWA | **Implemented: A** |
