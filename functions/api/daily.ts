@@ -8,10 +8,14 @@
  * making it identical for all players on the same day.
  */
 
+import { checkRateLimit } from '../../src/lib/rate-limit';
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
 
 export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) => {
   try {
+    const rateLimitResponse = await checkRateLimit(context.request, context.env, 'DAILY');
+    if (rateLimitResponse) return rateLimitResponse;
     const url = new URL(context.request.url);
     const params = url.searchParams;
 

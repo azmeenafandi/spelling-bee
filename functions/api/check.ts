@@ -7,10 +7,14 @@
  *   attempt  — 1 or 2 (required)
  */
 
+import { checkRateLimit } from '../../src/lib/rate-limit';
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
 
 export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (context) => {
   try {
+    const rateLimitResponse = await checkRateLimit(context.request, context.env, 'CHECK');
+    if (rateLimitResponse) return rateLimitResponse;
     // ── Parse JSON body ──
     let body: unknown;
     try {
