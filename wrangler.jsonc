@@ -3,6 +3,12 @@
 	"name": "spelling-bee",
 	"compatibility_date": "2026-06-13",
 	"pages_build_output_dir": "build",
+	"vars": {
+		"RATE_LIMIT_WINDOW_SECONDS": "60",
+		"RATE_LIMIT_WORD": "30",
+		"RATE_LIMIT_DAILY": "10",
+		"RATE_LIMIT_CHECK": "60"
+	},
 	"d1_databases": [
 		{
 			"binding": "DB",
