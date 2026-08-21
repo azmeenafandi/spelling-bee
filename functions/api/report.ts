@@ -7,6 +7,8 @@
  *   note    — optional free-text elaboration
  */
 
+import { checkRateLimit } from '../../src/lib/rate-limit';
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
 
 const VALID_REASONS = ['wrong_spelling', 'wrong_definition', 'wrong_variant', 'other'] as const;
@@ -14,6 +16,10 @@ const VALID_REASONS_SET = new Set(VALID_REASONS);
 
 export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (context) => {
   try {
+    // ── Rate limit check ──
+    const rateLimitResponse = await checkRateLimit(context.request, context.env, 'REPORT');
+    if (rateLimitResponse) return rateLimitResponse;
+
     // ── Parse JSON body ──
     let body: unknown;
     try {
