@@ -9,11 +9,15 @@
  */
 
 import { checkRateLimit } from '../../src/lib/rate-limit';
+import { getCorsHeaders, handleOptions } from '../../src/lib/cors';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
 
 export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) => {
   try {
+    const optionsResponse = handleOptions(context.request);
+    if (optionsResponse) return optionsResponse;
+    const corsHeaders = getCorsHeaders(context.request);
     const rateLimitResponse = await checkRateLimit(context.request, context.env, 'DAILY');
     if (rateLimitResponse) return rateLimitResponse;
     const url = new URL(context.request.url);
@@ -24,7 +28,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
     if (variant !== 'british' && variant !== 'american') {
       return new Response(
         JSON.stringify({ error: 'variant must be "british" or "american"' }),
-        { status: 400, headers: JSON_HEADERS }
+        { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -55,7 +59,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
     if (wordCount === 0) {
       return new Response(
         JSON.stringify({ error: 'No words available for this variant' }),
-        { status: 404, headers: JSON_HEADERS }
+        { status: 404, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -84,7 +88,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
     if (!row) {
       return new Response(
         JSON.stringify({ error: 'Could not find daily word' }),
-        { status: 404, headers: JSON_HEADERS }
+        { status: 404, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -97,13 +101,14 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
         _length: row._length,
         date: dateStr,
       }),
-      { status: 200, headers: JSON_HEADERS }
+      { status: 200, headers: { ...JSON_HEADERS, ...corsHeaders } }
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Internal server error';
+    const corsHeaders = getCorsHeaders(context.request);
     return new Response(
       JSON.stringify({ error: message }),
-      { status: 500, headers: JSON_HEADERS }
+      { status: 500, headers: { ...JSON_HEADERS, ...corsHeaders } }
     );
   }
 };

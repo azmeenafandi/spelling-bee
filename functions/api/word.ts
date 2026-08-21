@@ -10,11 +10,15 @@
  */
 
 import { checkRateLimit } from '../../src/lib/rate-limit';
+import { getCorsHeaders, handleOptions } from '../../src/lib/cors';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
 
 export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) => {
   try {
+    const optionsResponse = handleOptions(context.request);
+    if (optionsResponse) return optionsResponse;
+    const corsHeaders = getCorsHeaders(context.request);
     const rateLimitResponse = await checkRateLimit(context.request, context.env, 'WORD');
     if (rateLimitResponse) return rateLimitResponse;
     const url = new URL(context.request.url);
@@ -36,7 +40,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
     ) {
       return new Response(
         JSON.stringify({ error: 'Missing required query parameters: variant, length_min, length_max, max_obscurity' }),
-        { status: 400, headers: JSON_HEADERS }
+        { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -44,7 +48,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
     if (variant !== 'british' && variant !== 'american') {
       return new Response(
         JSON.stringify({ error: 'variant must be "british" or "american"' }),
-        { status: 400, headers: JSON_HEADERS }
+        { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -56,14 +60,14 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
     if (isNaN(lengthMin) || isNaN(lengthMax) || isNaN(maxObscurity)) {
       return new Response(
         JSON.stringify({ error: 'length_min, length_max, and max_obscurity must be valid integers' }),
-        { status: 400, headers: JSON_HEADERS }
+        { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
     if (lengthMin < 1 || lengthMax < 1 || maxObscurity < 1 || maxObscurity > 5) {
       return new Response(
         JSON.stringify({ error: 'length_min/length_max must be ≥ 1; max_obscurity must be between 1 and 5' }),
-        { status: 400, headers: JSON_HEADERS }
+        { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -75,7 +79,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
         if (isNaN(id)) {
           return new Response(
             JSON.stringify({ error: `Invalid played_id value: "${part.trim()}"` }),
-            { status: 400, headers: JSON_HEADERS }
+            { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
           );
         }
         playedIds.push(id);
@@ -117,7 +121,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
     if (!row) {
       return new Response(
         JSON.stringify({ error: 'No words match the given criteria' }),
-        { status: 404, headers: JSON_HEADERS }
+        { status: 404, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -129,13 +133,14 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
         _obscurity: row._obscurity,
         _length: row._length,
       }),
-      { status: 200, headers: JSON_HEADERS }
+      { status: 200, headers: { ...JSON_HEADERS, ...corsHeaders } }
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Internal server error';
+    const corsHeaders = getCorsHeaders(context.request);
     return new Response(
       JSON.stringify({ error: message }),
-      { status: 500, headers: JSON_HEADERS }
+      { status: 500, headers: { ...JSON_HEADERS, ...corsHeaders } }
     );
   }
 };

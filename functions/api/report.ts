@@ -8,6 +8,7 @@
  */
 
 import { checkRateLimit } from '../../src/lib/rate-limit';
+import { getCorsHeaders, handleOptions } from '../../src/lib/cors';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
 
@@ -16,6 +17,9 @@ const VALID_REASONS_SET = new Set(VALID_REASONS);
 
 export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (context) => {
   try {
+    const optionsResponse = handleOptions(context.request);
+    if (optionsResponse) return optionsResponse;
+    const corsHeaders = getCorsHeaders(context.request);
     // ── Rate limit check ──
     const rateLimitResponse = await checkRateLimit(context.request, context.env, 'REPORT');
     if (rateLimitResponse) return rateLimitResponse;
@@ -27,14 +31,14 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (context) 
     } catch {
       return new Response(
         JSON.stringify({ error: 'Invalid JSON body' }),
-        { status: 400, headers: JSON_HEADERS }
+        { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
     if (!body || typeof body !== 'object') {
       return new Response(
         JSON.stringify({ error: 'Request body must be a JSON object' }),
-        { status: 400, headers: JSON_HEADERS }
+        { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -44,14 +48,14 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (context) 
     if (word_id === undefined || reason === undefined) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: word_id, reason' }),
-        { status: 400, headers: JSON_HEADERS }
+        { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
     if (typeof word_id !== 'number' || !Number.isInteger(word_id) || word_id <= 0) {
       return new Response(
         JSON.stringify({ error: 'word_id must be a positive integer' }),
-        { status: 400, headers: JSON_HEADERS }
+        { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -60,7 +64,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (context) 
         JSON.stringify({
           error: `Invalid reason. Must be one of: ${VALID_REASONS.join(', ')}`,
         }),
-        { status: 400, headers: JSON_HEADERS }
+        { status: 400, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -80,7 +84,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (context) 
     if (!word) {
       return new Response(
         JSON.stringify({ error: 'Word not found' }),
-        { status: 404, headers: JSON_HEADERS }
+        { status: 404, headers: { ...JSON_HEADERS, ...corsHeaders } }
       );
     }
 
@@ -91,12 +95,13 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (context) 
 
     return new Response(
       JSON.stringify({ ok: true }),
-      { status: 200, headers: JSON_HEADERS }
+      { status: 200, headers: { ...JSON_HEADERS, ...corsHeaders } }
     );
   } catch (err) {
+    const corsHeaders = getCorsHeaders(context.request);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: JSON_HEADERS }
+      { status: 500, headers: { ...JSON_HEADERS, ...corsHeaders } }
     );
   }
 };
