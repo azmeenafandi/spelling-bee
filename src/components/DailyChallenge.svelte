@@ -97,7 +97,7 @@
           <span class="result-emoji">✅</span>
           <span class="result-text">You got today's word!</span>
           {#if dailyWord}
-            <span class="result-word">{dailyWord._spelling}</span>
+            <span class="result-word">{atob(dailyWord._spelling)}</span>
           {/if}
         </div>
       {:else}
@@ -105,7 +105,7 @@
           <span class="result-emoji">❌</span>
           <span class="result-text">Today's word was:</span>
           {#if dailyWord}
-            <span class="result-word">{dailyWord._spelling}</span>
+            <span class="result-word">{atob(dailyWord._spelling)}</span>
           {/if}
         </div>
       {/if}
