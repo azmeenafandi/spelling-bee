@@ -34,14 +34,6 @@ A single-player spelling practice game with escalating difficulty, algorithmic s
 npm install
 ```
 
-### Local Development
-
-```bash
-./dev.sh
-```
-
-This script handles D1 local setup, migrations, and word list seeding automatically.
-
 ### Build
 
 ```bash
@@ -70,7 +62,6 @@ spelling-bee/
 ├── seed/              # Word list seed files
 ├── static/            # Static assets (favicons, manifest)
 ├── .documentations/   # Product specs and deployment guides
-└── dev.sh             # Local development setup script
 ```
 
 ## License
