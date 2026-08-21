@@ -61,7 +61,6 @@ spelling-bee/
 ├── migrations/        # D1 database migrations
 ├── seed/              # Word list seed files
 ├── static/            # Static assets (favicons, manifest)
-├── .documentations/   # Product specs and deployment guides
 ```
 
 ## License
