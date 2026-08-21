@@ -255,7 +255,7 @@
       } else if ($currentAttempt === 1) {
         handleWrongFirstAttempt();
       } else {
-        handleWrongSecondAttempt(result.answer ?? '');
+        handleWrongSecondAttempt(atob($currentWord._spelling));
       }
     } catch {
       errorMessage = 'Failed to check spelling. Try again?';

@@ -90,9 +90,9 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (context) 
       );
     }
 
-    // attempt === 2 → game over, reveal answer
+    // attempt === 2 → game over
     return new Response(
-      JSON.stringify({ correct: false, game_over: true, answer: word.spelling }),
+      JSON.stringify({ correct: false, game_over: true }),
       { status: 200, headers: JSON_HEADERS }
     );
   } catch (err) {
