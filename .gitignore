@@ -1,4 +1,5 @@
-.documentation/
+.documentations/
+.impeccable/
 .subagent-orchestration/
 .pi/
 node_modules/
