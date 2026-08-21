@@ -15,7 +15,8 @@
     speaking = true;
 
     try {
-      await speakWord(spelling, lang);
+      const decoded = atob(spelling);
+      await speakWord(decoded, lang);
     } catch {
       // Speech error — silently recover
     } finally {

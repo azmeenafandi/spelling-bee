@@ -12,7 +12,7 @@
 export interface WordResponse {
   id: number;
   definition: string;
-  _spelling: string;
+  _spelling: string; // base64-encoded (decode with atob())
   _obscurity: number;
   _length: number;
 }

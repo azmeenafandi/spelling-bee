@@ -88,7 +88,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (context) =
       JSON.stringify({
         id: row.id,
         definition: row.definition,
-        _spelling: row._spelling,
+        _spelling: btoa(row._spelling),
         _obscurity: row._obscurity,
         _length: row._length,
         date: dateStr,
